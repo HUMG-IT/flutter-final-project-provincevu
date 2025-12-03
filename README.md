@@ -2,7 +2,7 @@
 # Bài tập lớn - Phát triển ứng dụng với Flutter
 
 ## Thông tin sinh viên
-- **Họ và tên**: _________
+- **Họ và tên**: Vũ Văn Tỉnh
 - **MSSV**: _________
 - **Lớp**: _________
 
