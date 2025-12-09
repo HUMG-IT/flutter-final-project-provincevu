@@ -38,7 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
       key: _scaffoldKey,
 
       // Drawer (menu bên trái)
-      drawer: const AppSideMenu(),
+      drawer: AppSideMenu(),
 
       body: SafeArea(
         child: LayoutBuilder(

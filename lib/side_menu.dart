@@ -3,22 +3,17 @@ import 'package:flutter_final_project_provincevu/screens/home_screen.dart';
 import 'package:flutter_final_project_provincevu/screens/statistic_category_screen.dart';
 import 'package:flutter_final_project_provincevu/screens/statistic_month_screen.dart';
 
-/// Drawer menu bên trái – điều hướng đến màn hình tương ứng
-class AppSideMenu extends StatefulWidget {
-  const AppSideMenu({super.key});
-
-  @override
-  State<AppSideMenu> createState() => _AppSideMenuState();
-}
-
-class _AppSideMenuState extends State<AppSideMenu> {
-  int _selectedIndex = 0;
+/// Drawer menu bên trái – điều hướng đến màn hình tương ứng và loại bỏ nút "quay lại"
+class AppSideMenu extends StatelessWidget {
+  AppSideMenu({super.key});
 
   // Danh sách item menu
   final List<_MenuItem> _menuItems = const [
     _MenuItem(Icons.home, 'Trang chủ'),
     _MenuItem(Icons.pie_chart, 'Thống kê theo tháng'),
     _MenuItem(Icons.list_alt, 'Thống kê theo danh mục'),
+    _MenuItem(Icons.settings, 'Cài đặt'),
+    _MenuItem(Icons.info, 'Giới thiệu'),
   ];
 
   // Danh sách màn hình tương ứng
@@ -26,21 +21,17 @@ class _AppSideMenuState extends State<AppSideMenu> {
     const HomeScreen(), // Màn hình trang chủ
     const StatisticMonthScreen(), // Màn hình Thống kê
     const StatisticCategoryScreen(), // Màn hình Danh mục
+    // const SettingsScreen(), // Màn hình Cài đặt
+    // const AboutScreen(), // Màn hình Giới thiệu
   ];
 
-  /// Xử lý lựa chọn menu
-  void _onSelect(int index) {
-    setState(() {
-      _selectedIndex = index; // Cập nhật Index được chọn
-    });
-
+  void _onSelect(BuildContext context, int index) {
     // Đóng Drawer
     Navigator.of(context).pop();
-
-    // Điều hướng đến màn hình tương ứng
+    // Điều hướng đến màn hình tương ứng và xóa tất cả các route trước đó
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (context) => _screens[index]),
-      (route) => false, // Xóa tất cả các route trước
+      (route) => false, // Xóa tất cả các route trước đó khỏi stack
     );
   }
 
@@ -60,24 +51,14 @@ class _AppSideMenuState extends State<AppSideMenu> {
                 itemCount: _menuItems.length,
                 separatorBuilder: (_, __) => const Divider(height: 1),
                 itemBuilder: (context, index) {
-                  final item = _menuItems[index];
-                  final selected = index == _selectedIndex;
+                  final item = _menuItems[index]; // Lấy Item Menu
                   return ListTile(
                     leading: Icon(
                       item.icon,
-                      color: selected ? Colors.blue : null,
-                    ),
-                    title: Text(
-                      item.title,
-                      style: TextStyle(
-                        fontWeight: selected
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                        color: selected ? Colors.blue : null,
-                      ),
-                    ),
+                    ), // Mặc định giữ nguyên màu cho Icon
+                    title: Text(item.title), // Mặc định giữ nguyên màu cho Text
                     // Khi chọn item, trigger `_onSelect`
-                    onTap: () => _onSelect(index),
+                    onTap: () => _onSelect(context, index),
                   );
                 },
               ),

@@ -17,7 +17,7 @@ class _StatisticCategoryScreenState extends State<StatisticCategoryScreen> {
     return Scaffold(
       key: _scaffoldKey, // Gắn Key vào Scaffold
       // Drawer (menu bên trái)
-      drawer: const AppSideMenu(),
+      drawer: AppSideMenu(),
 
       body: SafeArea(
         child: LayoutBuilder(
