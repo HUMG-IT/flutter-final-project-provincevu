@@ -4,18 +4,32 @@ void main() {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+/// App root – now Stateful to allow future theming or global state changes
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
   @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  final GlobalKey<NavigatorState> _navKey = GlobalKey<NavigatorState>();
+
+  @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
+      navigatorKey: _navKey,
       debugShowCheckedModeBanner: false,
-      home: HomePage(),
+      routes: {
+        '/': (_) => const HomePage(),
+        '/details': (_) => const DetailsScreen(),
+      },
+      initialRoute: '/',
     );
   }
 }
 
+/// Home screen – Stateful
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -24,6 +38,9 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  /// Key để mở Drawer từ IconButton
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
   /// Giả lập dữ liệu: Chi tiêu trong nhiều ngày (sẽ lấy 7 ngày gần nhất)
   List<Map<String, dynamic>> getSpendingData() {
     return [
@@ -41,10 +58,15 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
+
+      // Drawer (menu bên trái)
+      drawer: const AppSideMenu(),
+
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
-            // Đảm bảo nội dung cuộn được
+            // Đảm bảo nội dung cuộn được trên màn hình ngắn
             return SingleChildScrollView(
               child: Padding(
                 padding:
@@ -56,7 +78,10 @@ class _HomePageState extends State<HomePage> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         IconButton(
-                          onPressed: () {},
+                          onPressed: () {
+                            // Mở Drawer
+                            _scaffoldKey.currentState?.openDrawer();
+                          },
                           icon: const Icon(Icons.menu),
                         ),
                         const Column(
@@ -99,7 +124,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                     const SizedBox(height: 20),
 
-                    // Biểu đồ cột: sửa lỗi TextButton
+                    // Biểu đồ cột: nút Chi tiết sẽ điều hướng sang screen khác
                     SizedBox(
                       height: 200,
                       child: Card(
@@ -123,7 +148,12 @@ class _HomePageState extends State<HomePage> {
                                   ),
                                   const Spacer(),
                                   TextButton(
-                                    onPressed: () {},
+                                    onPressed: () {
+                                      Navigator.of(context).pushNamed(
+                                        '/details',
+                                        arguments: getSpendingData(),
+                                      );
+                                    },
                                     style: TextButton.styleFrom(
                                       textStyle: const TextStyle(
                                         fontSize: 14,
@@ -132,6 +162,7 @@ class _HomePageState extends State<HomePage> {
                                     child: const Row(
                                       children: [
                                         Text("Chi tiết"),
+                                        SizedBox(width: 6),
                                         Icon(
                                           Icons.arrow_forward_ios,
                                           size: 14,
@@ -155,15 +186,14 @@ class _HomePageState extends State<HomePage> {
                     ),
                     const SizedBox(height: 20),
 
-                    // Danh sách các danh mục – đúng chiều cao
+                    // Danh sách các danh mục – đúng chiều cao, cuộn theo SingleChildScrollView
                     ListView.builder(
                       itemCount: 5,
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
                       itemBuilder: (context, index) => ListTile(
                         leading: CircleAvatar(
-                          backgroundColor:
-                              Colors.redAccent.withValues(alpha: 0.1),
+                          backgroundColor: Colors.redAccent.withOpacity(0.1),
                           child: const Icon(
                             Icons.category,
                             color: Colors.redAccent,
@@ -192,9 +222,96 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-/// Biểu đồ tròn (sửa widget nếu cần)
-class PieChartWidget extends StatelessWidget {
+/// Drawer menu bên trái – Stateful
+class AppSideMenu extends StatefulWidget {
+  const AppSideMenu({super.key});
+
+  @override
+  State<AppSideMenu> createState() => _AppSideMenuState();
+}
+
+class _AppSideMenuState extends State<AppSideMenu> {
+  int _selectedIndex = 0;
+
+  void _onSelect(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+    // Tùy chọn hành vi khi chọn menu:
+    // Ví dụ điều hướng hoặc hiển thị SnackBar
+    Navigator.of(context).pop(); // Đóng Drawer
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Đã chọn: ${_menuItems[index].title}')),
+    );
+  }
+
+  final List<_MenuItem> _menuItems = const [
+    _MenuItem(Icons.home, 'Trang chủ'),
+    _MenuItem(Icons.pie_chart, 'Biểu đồ'),
+    _MenuItem(Icons.list_alt, 'Danh mục'),
+    _MenuItem(Icons.settings, 'Cài đặt'),
+    _MenuItem(Icons.info, 'Giới thiệu'),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Drawer(
+      child: SafeArea(
+        child: Column(
+          children: [
+            const UserAccountsDrawerHeader(
+              currentAccountPicture: CircleAvatar(
+                child: Icon(Icons.person),
+              ),
+              accountName: Text('Province Vu'),
+              accountEmail: Text('provincevu@example.com'),
+            ),
+            Expanded(
+              child: ListView.separated(
+                itemCount: _menuItems.length,
+                separatorBuilder: (_, __) => const Divider(height: 1),
+                itemBuilder: (context, index) {
+                  final item = _menuItems[index];
+                  final selected = index == _selectedIndex;
+                  return ListTile(
+                    leading:
+                        Icon(item.icon, color: selected ? Colors.blue : null),
+                    title: Text(
+                      item.title,
+                      style: TextStyle(
+                        fontWeight:
+                            selected ? FontWeight.bold : FontWeight.normal,
+                        color: selected ? Colors.blue : null,
+                      ),
+                    ),
+                    onTap: () => _onSelect(index),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _MenuItem {
+  final IconData icon;
+  final String title;
+  const _MenuItem(this.icon, this.title);
+}
+
+/// Biểu đồ tròn (đã là Stateful)
+class PieChartWidget extends StatefulWidget {
   const PieChartWidget({super.key});
+
+  @override
+  State<PieChartWidget> createState() => _PieChartWidgetState();
+}
+
+class _PieChartWidgetState extends State<PieChartWidget> {
+  double percent = 0.9; // ví dụ cho phép thay đổi sau này
 
   @override
   Widget build(BuildContext context) {
@@ -205,32 +322,40 @@ class PieChartWidget extends StatelessWidget {
           height: 70,
           width: 70,
           child: CircularProgressIndicator(
-            value: 0.7,
+            value: percent,
             strokeWidth: 20,
             backgroundColor: Colors.grey.shade300,
             color: Colors.redAccent,
           ),
         ),
-        const Text(
-          "70%",
-          style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+        Text(
+          "${(percent * 100).round()}%",
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
         ),
       ],
     );
   }
 }
 
-/// Biểu đồ cột (giữ logic)
-class BarChartWidget extends StatelessWidget {
+/// Biểu đồ cột – chuyển sang Stateful để dễ mở rộng/animate sau này
+class BarChartWidget extends StatefulWidget {
   final List<Map<String, dynamic>> spendingData;
 
   const BarChartWidget({super.key, required this.spendingData});
 
   @override
+  State<BarChartWidget> createState() => _BarChartWidgetState();
+}
+
+class _BarChartWidgetState extends State<BarChartWidget> {
+  @override
   Widget build(BuildContext context) {
-    final recentData = spendingData.reversed.take(7).toList().reversed.toList();
+    final recentData =
+        widget.spendingData.reversed.take(7).toList().reversed.toList();
+
     final amounts =
         recentData.map((e) => (e['amount'] as num).toDouble()).toList();
+
     final double maxValue =
         amounts.isEmpty ? 0 : amounts.reduce((a, b) => a > b ? a : b);
 
@@ -302,6 +427,44 @@ class BarChartWidget extends StatelessWidget {
           }).toList(),
         );
       },
+    );
+  }
+}
+
+/// Details screen – Stateful, nhận dữ liệu qua arguments khi điều hướng
+class DetailsScreen extends StatefulWidget {
+  const DetailsScreen({super.key});
+
+  @override
+  State<DetailsScreen> createState() => _DetailsScreenState();
+}
+
+class _DetailsScreenState extends State<DetailsScreen> {
+  late List<Map<String, dynamic>> _data;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final args = ModalRoute.of(context)?.settings.arguments;
+    _data = (args is List<Map<String, dynamic>>) ? args : [];
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Chi tiết chi tiêu')),
+      body: ListView.separated(
+        padding: const EdgeInsets.all(16),
+        itemCount: _data.length,
+        separatorBuilder: (_, __) => const Divider(height: 1),
+        itemBuilder: (context, index) {
+          final item = _data[index];
+          return ListTile(
+            title: Text(item['day'].toString()),
+            trailing: Text('\$${item['amount']}'),
+          );
+        },
+      ),
     );
   }
 }
