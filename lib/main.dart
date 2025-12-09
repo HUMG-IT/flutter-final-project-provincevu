@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_final_project_provincevu/home_page.dart';
+import 'package:flutter_final_project_provincevu/screens/home_screen.dart';
 import 'package:flutter_final_project_provincevu/seven_day_detail.dart';
 
 void main() {
@@ -15,7 +15,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       routes: {
-        '/': (_) => const HomePage(),
+        '/': (_) => const HomeScreen(),
         '/details': (_) => const DetailsScreen(),
       },
       initialRoute: '/',

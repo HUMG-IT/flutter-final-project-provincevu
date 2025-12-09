@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_final_project_provincevu/screens/home_screen.dart';
+import 'package:flutter_final_project_provincevu/screens/statistic_category_screen.dart';
+import 'package:flutter_final_project_provincevu/screens/statistic_month_screen.dart';
 
-/// Drawer menu bên trái – giữ đơn giản, không tách model riêng để giảm khó khăn
+/// Drawer menu bên trái – điều hướng đến màn hình tương ứng
 class AppSideMenu extends StatefulWidget {
   const AppSideMenu({super.key});
 
@@ -11,22 +14,33 @@ class AppSideMenu extends StatefulWidget {
 class _AppSideMenuState extends State<AppSideMenu> {
   int _selectedIndex = 0;
 
-  // Danh sách item menu nằm tại đây để tránh tách file gây phức tạp
+  // Danh sách item menu
   final List<_MenuItem> _menuItems = const [
     _MenuItem(Icons.home, 'Trang chủ'),
-    _MenuItem(Icons.pie_chart, 'Biểu đồ'),
-    _MenuItem(Icons.list_alt, 'Danh mục'),
-    _MenuItem(Icons.settings, 'Cài đặt'),
-    _MenuItem(Icons.info, 'Giới thiệu'),
+    _MenuItem(Icons.pie_chart, 'Thống kê theo tháng'),
+    _MenuItem(Icons.list_alt, 'Thống kê theo danh mục'),
   ];
 
+  // Danh sách màn hình tương ứng
+  final List<Widget> _screens = [
+    const HomeScreen(), // Màn hình trang chủ
+    const StatisticMonthScreen(), // Màn hình Thống kê
+    const StatisticCategoryScreen(), // Màn hình Danh mục
+  ];
+
+  /// Xử lý lựa chọn menu
   void _onSelect(int index) {
     setState(() {
-      _selectedIndex = index;
+      _selectedIndex = index; // Cập nhật Index được chọn
     });
-    Navigator.of(context).pop(); // Đóng Drawer
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Đã chọn: ${_menuItems[index].title}')),
+
+    // Đóng Drawer
+    Navigator.of(context).pop();
+
+    // Điều hướng đến màn hình tương ứng
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (context) => _screens[index]),
+      (route) => false, // Xóa tất cả các route trước
     );
   }
 
@@ -62,6 +76,7 @@ class _AppSideMenuState extends State<AppSideMenu> {
                         color: selected ? Colors.blue : null,
                       ),
                     ),
+                    // Khi chọn item, trigger `_onSelect`
                     onTap: () => _onSelect(index),
                   );
                 },
@@ -74,6 +89,7 @@ class _AppSideMenuState extends State<AppSideMenu> {
   }
 }
 
+/// Lớp model menu giữ thông tin từng item
 class _MenuItem {
   final IconData icon;
   final String title;

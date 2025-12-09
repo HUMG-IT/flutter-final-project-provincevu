@@ -4,14 +4,14 @@ import 'package:flutter_final_project_provincevu/charts/pie_chart.dart';
 import 'package:flutter_final_project_provincevu/side_menu.dart';
 
 /// Home screen – Stateful
-class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomeScreenState extends State<HomeScreen> {
   /// Key để mở Drawer từ IconButton
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
@@ -43,7 +43,6 @@ class _HomePageState extends State<HomePage> {
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
-            // Đảm bảo nội dung cuộn được trên màn hình ngắn
             return SingleChildScrollView(
               child: Padding(
                 padding: const EdgeInsets.symmetric(

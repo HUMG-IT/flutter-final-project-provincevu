@@ -36,7 +36,7 @@ class _PieChartWidgetState extends State<PieChartWidget> {
           child: CircularProgressIndicator(
             value: percent,
             strokeWidth: 20,
-            backgroundColor: const Color(0xFF2196F3),
+            backgroundColor: const Color.fromARGB(255, 69, 199, 73),
             color: Colors.redAccent,
           ),
         ),
