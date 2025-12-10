@@ -11,6 +11,32 @@ class BarChartWidget extends StatefulWidget {
 }
 
 class _BarChartWidgetState extends State<BarChartWidget> {
+  /// Helper function to format numbers with . as thousand separator
+  String _formatNumber(num value) {
+    final s = value.toStringAsFixed(0);
+    return s.replaceAll(RegExp(r'\B(?=(\d{3})+(?!\d))'), '.');
+  }
+
+  /// Helper function to build RichText with number and "đ"
+  Widget _vndText(num amount, {Color? color}) {
+    return RichText(
+      text: TextSpan(
+        style: TextStyle(
+          color: color ?? Colors.black87,
+          fontWeight: FontWeight.w600,
+          fontSize: 10,
+        ),
+        children: [
+          TextSpan(text: _formatNumber(amount)),
+          const TextSpan(
+            text: ' đ',
+            style: TextStyle(decoration: TextDecoration.underline),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final recentData = widget.spendingData.reversed
@@ -57,13 +83,7 @@ class _BarChartWidgetState extends State<BarChartWidget> {
                   height: topLabelHeight,
                   child: FittedBox(
                     fit: BoxFit.scaleDown,
-                    child: Text(
-                      '\$${amount.toInt()}',
-                      style: const TextStyle(
-                        color: Colors.black87,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
+                    child: _vndText(amount, color: Colors.black87),
                   ),
                 ),
                 const SizedBox(height: verticalSpacing),

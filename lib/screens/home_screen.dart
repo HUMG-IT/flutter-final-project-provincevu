@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_final_project_provincevu/charts/bar_chart.dart';
 import 'package:flutter_final_project_provincevu/charts/pie_chart.dart';
 import 'package:flutter_final_project_provincevu/side_menu.dart';
+import 'package:localstore/localstore.dart';
 
 /// Home screen – Stateful
 class HomeScreen extends StatefulWidget {
@@ -15,22 +16,156 @@ class _HomeScreenState extends State<HomeScreen> {
   /// Key để mở Drawer từ IconButton
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  /// Giả lập dữ liệu: Chi tiêu trong nhiều ngày (sẽ lấy 7 ngày gần nhất)
-  List<Map<String, dynamic>> getSpendingData() {
-    return [
-      {"day": "2025-12-01", "amount": 300},
-      {"day": "2025-12-02", "amount": 500},
-      {"day": "2025-12-03", "amount": 700},
-      {"day": "2025-12-04", "amount": 200},
-      {"day": "2025-12-05", "amount": 900}, // lớn nhất
-      {"day": "2025-12-06", "amount": 400},
-      {"day": "2025-12-07", "amount": 600},
-      {"day": "2025-12-08", "amount": 250}, // ngoài phạm vi 7 ngày
-    ];
+  /// Localstore instance
+  final db = Localstore.instance;
+
+  /// State: Thu nhập, Chi tiêu, Tổng số dư và dữ liệu chi theo ngày
+  double thuNhap = 0; // Thu nhập
+  double chiTieu = 0; // Chi tiêu
+  int tongSoDu = 0; // Tổng số dư = thuNhap - chiTieu
+  Map<String, dynamic> _spendingDocs = {}; // bản đồ {date: {amount: ...}}
+
+  /// Stream lắng nghe thay đổi dữ liệu spending (tùy chọn)
+  Stream<Map<String, dynamic>>? _spendingStream;
+
+  // ========= Helpers cho định dạng VND =========
+
+  // Định dạng số: 1234567 -> 1.234.567
+  String _formatNumber(num amount) {
+    final s = amount.toStringAsFixed(0);
+    return s.replaceAll(RegExp(r'\B(?=(\d{3})+(?!\d))'), '.');
   }
 
-  final double thuNhap = 10000;
-  final double chiTieu = 4500;
+  // Hiển thị số tiền VND: phần số bình thường, ký hiệu "đ" có gạch chân.
+  Widget vndText(
+    num amount, {
+    Color? color,
+    double fontSize = 14,
+    FontWeight fontWeight = FontWeight.bold,
+    bool negative = false,
+  }) {
+    final baseStyle = TextStyle(
+      fontSize: fontSize,
+      fontWeight: fontWeight,
+      color: color,
+    );
+    final number = _formatNumber(amount);
+    return RichText(
+      text: TextSpan(
+        style: baseStyle,
+        children: [
+          TextSpan(text: negative ? '-$number' : number),
+          const TextSpan(text: ' '),
+          TextSpan(
+            text: 'đ',
+            style: baseStyle.copyWith(decoration: TextDecoration.underline),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _initLoad();
+  }
+
+  /// Tải dữ liệu từ Localstore (finance/totals và collection spending)
+  Future<void> _initLoad() async {
+    await _loadFinance();
+    await _loadSpending();
+
+    // Khởi tạo stream để lắng nghe thay đổi nếu muốn UI tự động cập nhật
+    _spendingStream = db.collection('spending').stream;
+    _spendingStream?.listen((event) {
+      // event có dạng {docId: {amount: ...}}
+      setState(() {
+        _spendingDocs.addAll(event);
+      });
+    });
+  }
+
+  /// Load Thu nhập/Chi tiêu từ doc finance/totals
+  Future<void> _loadFinance() async {
+    final totals = await db.collection('finance').doc('totals').get();
+    setState(() {
+      thuNhap = (totals?['income'] as num?)?.toDouble() ?? 10000000;
+      chiTieu = (totals?['expenses'] as num?)?.toDouble() ?? 4500000;
+      tongSoDu = (thuNhap - chiTieu).toInt();
+    });
+  }
+
+  /// Load dữ liệu chi tiêu từng ngày từ collection spending
+  Future<void> _loadSpending() async {
+    final docs = await db.collection('spending').get();
+    setState(() {
+      _spendingDocs = docs ?? {};
+    });
+  }
+
+  /// Save Thu nhập/Chi tiêu vào finance/totals
+  Future<void> _saveFinance() async {
+    await db.collection('finance').doc('totals').set({
+      'income': thuNhap,
+      'expenses': chiTieu,
+      'updated_at': DateTime.now().toIso8601String(),
+    });
+    setState(() {
+      tongSoDu = (thuNhap - chiTieu).toInt();
+    });
+  }
+
+  /// Thêm chi tiêu cho một ngày (nếu có sẵn thì cộng dồn)
+  Future<void> _addDailySpending(String date, double amount) async {
+    final existing = _spendingDocs[date];
+    final currentAmount = (existing?['amount'] as num?)?.toDouble() ?? 0.0;
+    final newAmount = currentAmount + amount;
+    await db.collection('spending').doc(date).set({
+      'amount': newAmount,
+      'updated_at': DateTime.now().toIso8601String(),
+    });
+    await _loadSpending();
+  }
+
+  /// Lấy 7 ngày gần nhất để hiển thị cho BarChartWidget (từ Localstore)
+  List<Map<String, dynamic>> getSpendingDataFromLocalstore() {
+    // _spendingDocs có dạng { 'YYYY-MM-DD': { 'amount': <double> }, ... }
+    final entries = _spendingDocs.entries
+        .map(
+          (e) => {
+            'day': e.key,
+            'amount': (e.value['amount'] as num?)?.toDouble() ?? 0.0,
+          },
+        )
+        .toList();
+
+    // Sắp xếp theo ngày tăng dần để lấy 7 gần nhất theo thứ tự
+    entries.sort((a, b) => (a['day'] as String).compareTo(b['day'] as String));
+
+    // Lấy 7 cuối cùng (gần nhất), rồi đảm bảo thứ tự từ cũ đến mới
+    final last7 = entries.length <= 7
+        ? entries
+        : entries.sublist(entries.length - 7);
+    return last7;
+  }
+
+  /// Demo: thêm chi tiêu ngày hôm nay 300.000 đ
+  Future<void> _demoAddToday() async {
+    final now = DateTime.now();
+    final date =
+        "${now.year.toString().padLeft(4, '0')}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
+    await _addDailySpending(date, 300000);
+  }
+
+  /// Demo: cập nhật Thu nhập/Chi tiêu
+  Future<void> _demoUpdateFinance() async {
+    // Ví dụ chỉnh tăng thu nhập thêm 1 triệu
+    setState(() {
+      thuNhap += 1000000;
+    });
+    await _saveFinance();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,6 +178,8 @@ class _HomeScreenState extends State<HomeScreen> {
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
+            final spendingData = getSpendingDataFromLocalstore();
+
             return SingleChildScrollView(
               child: Padding(
                 padding: const EdgeInsets.symmetric(
@@ -62,9 +199,9 @@ class _HomeScreenState extends State<HomeScreen> {
                           },
                           icon: const Icon(Icons.menu),
                         ),
-                        const Column(
+                        Column(
                           children: [
-                            Text(
+                            const Text(
                               'Tổng số dư',
                               style: TextStyle(
                                 fontSize: 16,
@@ -72,12 +209,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                 color: Colors.grey,
                               ),
                             ),
-                            Text(
-                              '\$15,825.40',
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                              ),
+                            vndText(
+                              tongSoDu,
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
                             ),
                           ],
                         ),
@@ -89,25 +225,166 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     const SizedBox(height: 20),
 
-                    // Biểu đồ tròn hiển thị phần trăm chi tiêu
+                    // Biểu đồ tròn hiển thị phần trăm chi tiêu + tiêu đề và tháng/năm
                     SizedBox(
-                      height: 140,
+                      height: 200,
+                      width: MediaQuery.of(context).size.width,
                       child: Card(
                         elevation: 4,
+                        color: Colors.grey[200],
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: Center(
-                          child: PieChartWidget(
-                            thuNhap: thuNhap,
-                            chiTieu: chiTieu,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                          child: Column(
+                            children: [
+                              // Row 1: Tiêu đề ở giữa + TextButton bên phải
+                              Row(
+                                children: [
+                                  const Spacer(),
+                                  const Text(
+                                    'Sơ lược',
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                  const Spacer(),
+                                  TextButton(
+                                    onPressed: _demoUpdateFinance,
+                                    child: const Text(
+                                      'Cập nhật',
+                                      style: TextStyle(fontSize: 12),
+                                    ),
+                                  ),
+                                ],
+                              ),
+
+                              const SizedBox(height: 10),
+
+                              // Row 2: 3 column
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceAround,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  // Column 1: căn giữa, chứa tháng + năm và PieChart
+                                  Expanded(
+                                    flex: 3,
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
+                                      children: [
+                                        Builder(
+                                          builder: (context) {
+                                            final now = DateTime.now();
+                                            final month = now.month
+                                                .toString()
+                                                .padLeft(2, '0');
+                                            final year = now.year;
+                                            final label = 'Tháng $month, $year';
+                                            return Text(
+                                              label,
+                                              style: const TextStyle(
+                                                fontSize: 13,
+                                                color: Color.fromARGB(
+                                                  255,
+                                                  0,
+                                                  0,
+                                                  0,
+                                                ), // Màu đen nhẹ
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                        const SizedBox(height: 8),
+                                        SizedBox(
+                                          height: 90,
+                                          child: PieChartWidget(
+                                            thuNhap: thuNhap,
+                                            chiTieu: chiTieu,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+
+                                  const SizedBox(width: 12),
+
+                                  // Column 2: căn trái, các label
+                                  const Expanded(
+                                    flex: 3,
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start, // Căn trái
+                                      children: [
+                                        Text(
+                                          'Thu nhập:',
+                                          style: TextStyle(fontSize: 14),
+                                        ),
+                                        SizedBox(height: 6),
+                                        Text(
+                                          'Chi tiêu:',
+                                          style: TextStyle(fontSize: 14),
+                                        ),
+                                        SizedBox(height: 6),
+                                        Text(
+                                          'Còn lại:',
+                                          style: TextStyle(fontSize: 14),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+
+                                  // Column 3: căn phải, các số
+                                  Expanded(
+                                    flex: 4,
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.end, // Căn phải
+                                      children: [
+                                        vndText(
+                                          thuNhap,
+                                          color: const Color.fromARGB(
+                                            255,
+                                            65,
+                                            80,
+                                            197,
+                                          ),
+                                          fontSize: 14,
+                                        ),
+                                        const SizedBox(height: 6),
+                                        vndText(
+                                          chiTieu,
+                                          color: Colors.red,
+                                          fontSize: 14,
+                                        ),
+                                        const SizedBox(height: 6),
+                                        vndText(
+                                          (thuNhap - chiTieu),
+                                          color: Colors.green,
+                                          fontSize: 14,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+
+                                  Expanded(child: Container()), // Spacer phải
+                                ],
+                              ),
+                            ],
                           ),
                         ),
                       ),
                     ),
                     const SizedBox(height: 20),
 
-                    // Biểu đồ cột: nút Chi tiết sẽ điều hướng sang screen khác
+                    // Biểu đồ cột: dữ liệu từ Localstore
                     SizedBox(
                       height: 200,
                       child: Card(
@@ -131,21 +408,16 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ),
                                   const Spacer(),
                                   TextButton(
-                                    onPressed: () {
-                                      Navigator.of(context).pushNamed(
-                                        '/details',
-                                        arguments: getSpendingData(),
-                                      );
-                                    },
+                                    onPressed: _demoAddToday,
                                     style: TextButton.styleFrom(
                                       textStyle: const TextStyle(fontSize: 14),
                                     ),
                                     child: const Row(
                                       children: [
-                                        Text("Chi tiết"),
+                                        Text("Thêm hôm nay +300k"),
                                         SizedBox(width: 6),
                                         Icon(
-                                          Icons.arrow_forward_ios,
+                                          Icons.add,
                                           size: 14,
                                           color: Colors.grey,
                                         ),
@@ -157,7 +429,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               const SizedBox(height: 12),
                               Expanded(
                                 child: BarChartWidget(
-                                  spendingData: getSpendingData(),
+                                  spendingData: spendingData,
                                 ),
                               ),
                             ],
@@ -167,32 +439,47 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     const SizedBox(height: 20),
 
-                    // Danh sách các danh mục – đúng chiều cao, cuộn theo SingleChildScrollView
+                    // Danh sách các danh mục – ví dụ hiển thị chi của hôm nay
                     ListView.builder(
-                      itemCount: 5,
+                      itemCount: _spendingDocs.length,
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
-                      itemBuilder: (context, index) => ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: Colors.redAccent.withValues(
-                            alpha: 0.1,
+                      itemBuilder: (context, index) {
+                        final entry = _spendingDocs.entries.elementAt(index);
+                        final date = entry.key;
+                        final amount =
+                            (entry.value['amount'] as num?)?.toDouble() ?? 0.0;
+
+                        return ListTile(
+                          leading: CircleAvatar(
+                            backgroundColor: Colors.redAccent.withValues(
+                              alpha: 0.1,
+                            ),
+                            child: const Icon(
+                              Icons.calendar_today,
+                              color: Colors.redAccent,
+                            ),
                           ),
-                          child: const Icon(
-                            Icons.category,
-                            color: Colors.redAccent,
+                          title: Text('Ngày $date'),
+                          subtitle: Row(
+                            children: [
+                              const Text('Tiền đã chi: '),
+                              vndText(
+                                amount,
+                                color: Colors.black,
+                                fontSize: 14,
+                              ),
+                            ],
                           ),
-                        ),
-                        title: Text('Danh mục $index'),
-                        subtitle: const Text('Tiền đã chi: \$1000'),
-                        trailing: const Text(
-                          '-\$500.00',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
+                          trailing: vndText(
+                            amount,
                             color: Colors.red,
+                            fontSize: 14,
+                            negative: true,
                           ),
-                        ),
-                        onTap: () {},
-                      ),
+                          onTap: () {},
+                        );
+                      },
                     ),
                   ],
                 ),
