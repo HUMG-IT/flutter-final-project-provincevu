@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_final_project_provincevu/services/login_dialog.dart';
 import 'package:flutter_final_project_provincevu/services/syns_data.dart';
 
 class BackupRestoreScreen extends StatefulWidget {
@@ -11,6 +12,58 @@ class BackupRestoreScreen extends StatefulWidget {
 class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
   final DataSyncService dataSyncService = DataSyncService(); // Khởi tạo service
   bool _loading = false; // Trạng thái tải
+
+  void _showRegisterDialog(BuildContext context, DataSyncService service) {
+    final emailController = TextEditingController();
+    final passController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          title: const Text("Đăng ký tài khoản mới"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: emailController,
+                decoration: const InputDecoration(labelText: "Email"),
+              ),
+              TextField(
+                controller: passController,
+                decoration: const InputDecoration(labelText: "Mật khẩu"),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text("Hủy"),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                try {
+                  await service.register(
+                    emailController.text.trim(),
+                    passController.text.trim(),
+                  );
+                  Navigator.pop(ctx);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Đăng ký thành công")),
+                  );
+                } catch (e) {
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text("Lỗi đăng ký: $e")));
+                }
+              },
+              child: const Text("Đăng ký"),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   /// Thực hiện sao lưu dữ liệu lên Firebase
   Future<void> _performBackup() async {
@@ -113,23 +166,36 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
                 ),
                 const SizedBox(height: 20),
                 if (!dataSyncService.isLoggedIn)
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                  Column(
                     children: [
-                      const Text("Bạn chưa đăng nhập. Hãy "),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                          // Replace with navigation to login screen, if available
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                "Chức năng đăng nhập sẽ được thêm.",
-                              ),
-                            ),
-                          );
-                        },
-                        child: const Text("đăng nhập"),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text("Bạn chưa đăng nhập. Hãy "),
+                          TextButton(
+                            onPressed: () {
+                              showDialog(
+                                context: context,
+                                builder: (context) => LoginDialog(
+                                  dataSyncService: dataSyncService,
+                                ),
+                              );
+                            },
+                            child: const Text("đăng nhập"),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text("Hoặc "),
+                          TextButton(
+                            onPressed: () {
+                              _showRegisterDialog(context, dataSyncService);
+                            },
+                            child: const Text("tạo tài khoản mới"),
+                          ),
+                        ],
                       ),
                     ],
                   ),
