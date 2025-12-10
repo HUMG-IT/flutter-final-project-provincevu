@@ -28,11 +28,10 @@ class AppSideMenu extends StatelessWidget {
   void _onSelect(BuildContext context, int index) {
     // Đóng Drawer
     Navigator.of(context).pop();
-    // Điều hướng đến màn hình tương ứng và xóa tất cả các route trước đó
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (context) => _screens[index]),
-      (route) => false, // Xóa tất cả các route trước đó khỏi stack
-    );
+    // Điều hướng đến màn hình tương ứng mà không xóa toàn bộ stack
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (context) => _screens[index]));
   }
 
   @override

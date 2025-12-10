@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_final_project_provincevu/charts/bar_chart.dart';
-import 'package:flutter_final_project_provincevu/charts/pie_chart.dart';
 import 'package:flutter_final_project_provincevu/side_menu.dart';
+// import 'package:flutter_final_project_provincevu/charts/pie_chart.dart';
+import 'package:flutter_final_project_provincevu/utils/currency.dart'
+    as currency;
+import 'package:flutter_final_project_provincevu/widgets/finance_summary_card.dart';
 import 'package:localstore/localstore.dart';
 
 /// Home screen – Stateful
@@ -30,13 +33,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // ========= Helpers cho định dạng VND =========
 
-  // Định dạng số: 1234567 -> 1.234.567
-  String _formatNumber(num amount) {
-    final s = amount.toStringAsFixed(0);
-    return s.replaceAll(RegExp(r'\B(?=(\d{3})+(?!\d))'), '.');
-  }
-
-  // Hiển thị số tiền VND: phần số bình thường, ký hiệu "đ" có gạch chân.
+  // Định dạng hiển thị tiền VND dùng utils
   Widget vndText(
     num amount, {
     Color? color,
@@ -44,24 +41,12 @@ class _HomeScreenState extends State<HomeScreen> {
     FontWeight fontWeight = FontWeight.bold,
     bool negative = false,
   }) {
-    final baseStyle = TextStyle(
+    return currency.vndText(
+      amount,
+      color: color,
       fontSize: fontSize,
       fontWeight: fontWeight,
-      color: color,
-    );
-    final number = _formatNumber(amount);
-    return RichText(
-      text: TextSpan(
-        style: baseStyle,
-        children: [
-          TextSpan(text: negative ? '-$number' : number),
-          const TextSpan(text: ' '),
-          TextSpan(
-            text: 'đ',
-            style: baseStyle.copyWith(decoration: TextDecoration.underline),
-          ),
-        ],
-      ),
+      negative: negative,
     );
   }
 
@@ -226,161 +211,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(height: 20),
 
                     // Biểu đồ tròn hiển thị phần trăm chi tiêu + tiêu đề và tháng/năm
-                    SizedBox(
-                      height: 200,
-                      width: MediaQuery.of(context).size.width,
-                      child: Card(
-                        elevation: 4,
-                        color: Colors.grey[200],
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 12,
-                          ),
-                          child: Column(
-                            children: [
-                              // Row 1: Tiêu đề ở giữa + TextButton bên phải
-                              Row(
-                                children: [
-                                  const Spacer(),
-                                  const Text(
-                                    'Sơ lược',
-                                    style: TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.w800,
-                                    ),
-                                  ),
-                                  const Spacer(),
-                                  TextButton(
-                                    onPressed: _demoUpdateFinance,
-                                    child: const Text(
-                                      'Cập nhật',
-                                      style: TextStyle(fontSize: 12),
-                                    ),
-                                  ),
-                                ],
-                              ),
-
-                              const SizedBox(height: 10),
-
-                              // Row 2: 3 column
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceAround,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  // Column 1: căn giữa, chứa tháng + năm và PieChart
-                                  Expanded(
-                                    flex: 3,
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.center,
-                                      children: [
-                                        Builder(
-                                          builder: (context) {
-                                            final now = DateTime.now();
-                                            final month = now.month
-                                                .toString()
-                                                .padLeft(2, '0');
-                                            final year = now.year;
-                                            final label = 'Tháng $month, $year';
-                                            return Text(
-                                              label,
-                                              style: const TextStyle(
-                                                fontSize: 13,
-                                                color: Color.fromARGB(
-                                                  255,
-                                                  0,
-                                                  0,
-                                                  0,
-                                                ), // Màu đen nhẹ
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                        const SizedBox(height: 8),
-                                        SizedBox(
-                                          height: 90,
-                                          child: PieChartWidget(
-                                            thuNhap: thuNhap,
-                                            chiTieu: chiTieu,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-
-                                  const SizedBox(width: 12),
-
-                                  // Column 2: căn trái, các label
-                                  const Expanded(
-                                    flex: 3,
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start, // Căn trái
-                                      children: [
-                                        Text(
-                                          'Thu nhập:',
-                                          style: TextStyle(fontSize: 14),
-                                        ),
-                                        SizedBox(height: 6),
-                                        Text(
-                                          'Chi tiêu:',
-                                          style: TextStyle(fontSize: 14),
-                                        ),
-                                        SizedBox(height: 6),
-                                        Text(
-                                          'Còn lại:',
-                                          style: TextStyle(fontSize: 14),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-
-                                  // Column 3: căn phải, các số
-                                  Expanded(
-                                    flex: 4,
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.end, // Căn phải
-                                      children: [
-                                        vndText(
-                                          thuNhap,
-                                          color: const Color.fromARGB(
-                                            255,
-                                            65,
-                                            80,
-                                            197,
-                                          ),
-                                          fontSize: 14,
-                                        ),
-                                        const SizedBox(height: 6),
-                                        vndText(
-                                          chiTieu,
-                                          color: Colors.red,
-                                          fontSize: 14,
-                                        ),
-                                        const SizedBox(height: 6),
-                                        vndText(
-                                          (thuNhap - chiTieu),
-                                          color: Colors.green,
-                                          fontSize: 14,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-
-                                  Expanded(child: Container()), // Spacer phải
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
+                    FinanceSummaryCard(
+                      thuNhap: thuNhap,
+                      chiTieu: chiTieu,
+                      onUpdate: _demoUpdateFinance,
                     ),
                     const SizedBox(height: 20),
 
@@ -487,6 +321,13 @@ class _HomeScreenState extends State<HomeScreen> {
             );
           },
         ),
+      ),
+      // nút hình tròn
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          // hành động khi nhấn nút
+        },
+        child: const Icon(Icons.add),
       ),
     );
   }
