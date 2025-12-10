@@ -37,7 +37,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget vndText(
     num amount, {
     Color? color,
-    double fontSize = 14,
+    double fontSize = 10.0,
     FontWeight fontWeight = FontWeight.bold,
     bool negative = false,
   }) {
@@ -116,14 +116,15 @@ class _HomeScreenState extends State<HomeScreen> {
   /// Lấy 7 ngày gần nhất để hiển thị cho BarChartWidget (từ Localstore)
   List<Map<String, dynamic>> getSpendingDataFromLocalstore() {
     // _spendingDocs có dạng { 'YYYY-MM-DD': { 'amount': <double> }, ... }
-    final entries = _spendingDocs.entries
-        .map(
-          (e) => {
-            'day': e.key,
-            'amount': (e.value['amount'] as num?)?.toDouble() ?? 0.0,
-          },
-        )
-        .toList();
+    final entries = _spendingDocs.entries.map((e) {
+      final value = e.value;
+      return {
+        'day': e.key,
+        'amount': (value is Map && value['amount'] is num)
+            ? (value['amount'] as num).toDouble()
+            : 0.0,
+      };
+    }).toList();
 
     // Sắp xếp theo ngày tăng dần để lấy 7 gần nhất theo thứ tự
     entries.sort((a, b) => (a['day'] as String).compareTo(b['day'] as String));
@@ -155,6 +156,8 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final spendingData = getSpendingDataFromLocalstore();
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
       key: _scaffoldKey,
@@ -167,9 +170,9 @@ class _HomeScreenState extends State<HomeScreen> {
           builder: (context, constraints) {
             return SingleChildScrollView(
               child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
+                padding: EdgeInsets.symmetric(
+                  horizontal: screenWidth * 0.05,
+                  vertical: screenHeight * 0.02,
                 ),
                 child: Column(
                   children: [
@@ -189,14 +192,14 @@ class _HomeScreenState extends State<HomeScreen> {
                             const Text(
                               'Tổng số dư',
                               style: TextStyle(
-                                fontSize: 16,
+                                fontSize: 14,
                                 fontWeight: FontWeight.w500,
                                 color: Colors.grey,
                               ),
                             ),
                             vndText(
                               tongSoDu,
-                              fontSize: 24,
+                              fontSize: 20,
                               fontWeight: FontWeight.bold,
                               color: Colors.black,
                             ),
@@ -237,7 +240,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     'Chi tiêu 7 ngày gần đây',
                                     style: TextStyle(
                                       fontSize: 16,
-                                      fontWeight: FontWeight.w600,
+                                      fontWeight: FontWeight.w800,
                                     ),
                                   ),
                                   const Spacer(),
@@ -248,11 +251,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ),
                                     child: const Row(
                                       children: [
-                                        Text("Thêm hôm nay +300k"),
+                                        Text("chi tiết"),
                                         SizedBox(width: 6),
                                         Icon(
-                                          Icons.add,
-                                          size: 14,
+                                          Icons.arrow_forward_ios,
+                                          size: 12,
                                           color: Colors.grey,
                                         ),
                                       ],
@@ -282,7 +285,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         final entry = _spendingDocs.entries.elementAt(index);
                         final date = entry.key;
                         final amount =
-                            (entry.value['amount'] as num?)?.toDouble() ?? 0.0;
+                            (entry.value is Map && entry.value['amount'] is num)
+                            ? (entry.value['amount'] as num).toDouble()
+                            : 0.0;
 
                         return ListTile(
                           leading: CircleAvatar(
