@@ -39,14 +39,12 @@ class _BarChartWidgetState extends State<BarChartWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final recentData = widget.spendingData.reversed
-        .take(7)
-        .toList()
-        .reversed
-        .toList();
+    final recentData = widget.spendingData.isEmpty
+        ? const <Map<String, dynamic>>[]
+        : widget.spendingData.reversed.take(7).toList().reversed.toList();
 
     final amounts = recentData
-        .map((e) => (e['amount'] as num).toDouble())
+        .map((e) => (e['amount'] as num?)?.toDouble() ?? 0.0)
         .toList();
 
     final double maxValue = amounts.isEmpty
@@ -71,8 +69,8 @@ class _BarChartWidgetState extends State<BarChartWidget> {
           crossAxisAlignment: CrossAxisAlignment.end,
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: recentData.map((data) {
-            final double amount = (data['amount'] as num).toDouble();
-            final double scaledHeight = maxValue > 0
+            final double amount = (data['amount'] as num?)?.toDouble() ?? 0.0;
+            final double scaledHeight = (maxValue > 0 && amount > 0)
                 ? (amount / maxValue) * maxBarHeight
                 : 0;
 
@@ -104,7 +102,9 @@ class _BarChartWidgetState extends State<BarChartWidget> {
                   child: FittedBox(
                     fit: BoxFit.scaleDown,
                     child: Text(
-                      (data['day'] as String).substring(5),
+                      ((data['day'] as String?) ?? '').isNotEmpty
+                          ? (data['day'] as String).substring(5)
+                          : '',
                       style: TextStyle(
                         fontSize: 10,
                         color: Colors.grey.shade600,

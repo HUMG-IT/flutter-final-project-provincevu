@@ -169,6 +169,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final spendingData = getSpendingDataFromLocalstore();
+
     return Scaffold(
       key: _scaffoldKey,
 
@@ -178,8 +180,6 @@ class _HomeScreenState extends State<HomeScreen> {
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
-            final spendingData = getSpendingDataFromLocalstore();
-
             return SingleChildScrollView(
               child: Padding(
                 padding: const EdgeInsets.symmetric(
