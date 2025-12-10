@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_final_project_provincevu/services/login_dialog.dart';
 import 'package:flutter_final_project_provincevu/services/syns_data.dart';
 
 class BackupRestoreScreen extends StatefulWidget {
@@ -13,70 +12,17 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
   final DataSyncService dataSyncService = DataSyncService(); // Khởi tạo service
   bool _loading = false; // Trạng thái tải
 
-  void _showRegisterDialog(BuildContext context, DataSyncService service) {
-    final emailController = TextEditingController();
-    final passController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (ctx) {
-        return AlertDialog(
-          title: const Text("Đăng ký tài khoản mới"),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: emailController,
-                decoration: const InputDecoration(labelText: "Email"),
-              ),
-              TextField(
-                controller: passController,
-                decoration: const InputDecoration(labelText: "Mật khẩu"),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text("Hủy"),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                try {
-                  await service.register(
-                    emailController.text.trim(),
-                    passController.text.trim(),
-                  );
-                  Navigator.pop(ctx);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Đăng ký thành công")),
-                  );
-                } catch (e) {
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(SnackBar(content: Text("Lỗi đăng ký: $e")));
-                }
-              },
-              child: const Text("Đăng ký"),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   /// Thực hiện sao lưu dữ liệu lên Firebase
   Future<void> _performBackup() async {
-    if (mounted) {
-      setState(() => _loading = true);
-    }
+    setState(() => _loading = true);
+
     try {
       await dataSyncService.backupToFirebase();
       if (mounted) {
         setState(() => _loading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text("Dữ liệu đã sao lưu thành công"),
+            content: Text("Dữ liệu đã sao lưu thành công!"),
             backgroundColor: Colors.green,
           ),
         );
@@ -95,20 +41,27 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
   }
 
   /// Thực hiện khôi phục dữ liệu từ Firebase về Localstore
+  // Trong BackupRestoreScreen, sau khi restore
   Future<void> _performRestore() async {
-    if (mounted) {
-      setState(() => _loading = true);
-    }
+    setState(() => _loading = true);
+
     try {
       await dataSyncService.restoreFromFirebase();
+
+      // Sau khi restore xong, gọi reload dữ liệu cho HomeScreen
+      // Cách đơn giản nhất là truyền callback hoặc dùng Navigator để pop về home rồi reload, ví dụ:
+      // Navigator.of(context).pop(); // Nếu backupRestore là màn phụ
+      // Hoặc force reload HomeScreen
       if (mounted) {
         setState(() => _loading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text("Dữ liệu đã được khôi phục"),
+            content: Text("Dữ liệu đã được khôi phục!"),
             backgroundColor: Colors.green,
           ),
         );
+        // Sau khi khôi phục xong, reload HomeScreen
+        // Đơn giản nhất: gọi reload khi pop về Home (ví dụ truyền callback khi mở BackupRestoreScreen)
       }
     } catch (e) {
       if (mounted) {
@@ -137,16 +90,14 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
             child: Column(
               children: [
                 const Text(
-                  "Bạn có thể sao lưu và khôi phục dữ liệu của mình trên Firebase. "
-                  "Hãy đảm bảo rằng bạn đã đăng nhập trước khi thực hiện các thao tác này.",
+                  "Bạn có thể sao lưu và khôi phục dữ liệu của mình trên Firebase.\n"
+                  "Dữ liệu được ghép từ nhiều bộ sưu tập (collections) hiện tại.",
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 14),
                 ),
                 const SizedBox(height: 40),
                 ElevatedButton.icon(
-                  onPressed: dataSyncService.isLoggedIn && !_loading
-                      ? _performBackup
-                      : null, // Không cho ấn nút khi chưa đăng nhập hoặc đang tải
+                  onPressed: !_loading ? _performBackup : null,
                   icon: const Icon(Icons.cloud_upload),
                   label: const Text("Sao lưu dữ liệu"),
                   style: ElevatedButton.styleFrom(
@@ -155,54 +106,16 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
                 ),
                 const SizedBox(height: 20),
                 ElevatedButton.icon(
-                  onPressed: dataSyncService.isLoggedIn && !_loading
-                      ? _performRestore
-                      : null,
+                  onPressed: !_loading ? _performRestore : null,
                   icon: const Icon(Icons.cloud_download),
                   label: const Text("Khôi phục dữ liệu"),
                   style: ElevatedButton.styleFrom(
                     minimumSize: const Size(double.infinity, 50),
                   ),
                 ),
-                const SizedBox(height: 20),
-                if (!dataSyncService.isLoggedIn)
-                  Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text("Bạn chưa đăng nhập. Hãy "),
-                          TextButton(
-                            onPressed: () {
-                              showDialog(
-                                context: context,
-                                builder: (context) => LoginDialog(
-                                  dataSyncService: dataSyncService,
-                                ),
-                              );
-                            },
-                            child: const Text("đăng nhập"),
-                          ),
-                        ],
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text("Hoặc "),
-                          TextButton(
-                            onPressed: () {
-                              _showRegisterDialog(context, dataSyncService);
-                            },
-                            child: const Text("tạo tài khoản mới"),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
               ],
             ),
           ),
-          // Hiển thị trạng thái tải
           if (_loading)
             Container(
               color: Colors.black45,
