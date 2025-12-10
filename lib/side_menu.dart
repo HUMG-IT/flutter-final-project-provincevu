@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_final_project_provincevu/screens/backup_restore_screen.dart';
 import 'package:flutter_final_project_provincevu/screens/home_screen.dart';
 import 'package:flutter_final_project_provincevu/screens/statistic_category_screen.dart';
 import 'package:flutter_final_project_provincevu/screens/statistic_month_screen.dart';
@@ -12,8 +13,8 @@ class AppSideMenu extends StatelessWidget {
     _MenuItem(Icons.home, 'Trang chủ'),
     _MenuItem(Icons.pie_chart, 'Thống kê theo tháng'),
     _MenuItem(Icons.list_alt, 'Thống kê theo danh mục'),
+    _MenuItem(Icons.backup, 'Sao lưu & Khôi phục'),
     _MenuItem(Icons.settings, 'Cài đặt'),
-    _MenuItem(Icons.info, 'Giới thiệu'),
   ];
 
   // Danh sách màn hình tương ứng
@@ -21,6 +22,7 @@ class AppSideMenu extends StatelessWidget {
     const HomeScreen(), // Màn hình trang chủ
     const StatisticMonthScreen(), // Màn hình Thống kê
     const StatisticCategoryScreen(), // Màn hình Danh mục
+    const BackupRestoreScreen(),
     // const SettingsScreen(), // Màn hình Cài đặt
     // const AboutScreen(), // Màn hình Giới thiệu
   ];

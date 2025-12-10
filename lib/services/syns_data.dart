@@ -19,7 +19,7 @@ class DataSyncService {
   /// Tải dữ liệu từ Localstore
   Future<Map<String, dynamic>> getAllLocalstoreData() async {
     final data = await localStore.collection('transactions').get();
-    return data ?? {};
+    return data ?? {}; // Trả về map rỗng nếu không có dữ liệu
   }
 
   /// Sao lưu dữ liệu từ Localstore lên Firebase
@@ -35,6 +35,10 @@ class DataSyncService {
 
     // Lấy dữ liệu từ Localstore
     final localData = await getAllLocalstoreData();
+    if (localData.isEmpty) {
+      print("Không có dữ liệu để sao lưu");
+      return;
+    }
 
     // Tải lên Firebase Firestore
     final backupCollection = firestore
@@ -66,6 +70,10 @@ class DataSyncService {
         .collection('backups');
 
     final snapshot = await backupCollection.get();
+    if (snapshot.docs.isEmpty) {
+      print("Không có dữ liệu để phục hồi từ Firebase");
+      return;
+    }
 
     for (var doc in snapshot.docs) {
       await localStore.collection('transactions').doc(doc.id).set(doc.data());

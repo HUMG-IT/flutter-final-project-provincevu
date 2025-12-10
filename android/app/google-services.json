@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "336675706450",
+    "project_id": "moneymanager-6d869",
+    "storage_bucket": "moneymanager-6d869.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:336675706450:android:26b42e44b5601d5befb18b",
+        "android_client_info": {
+          "package_name": "com.example.flutter_final_project_provincevu"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDni3FteAun6c2HZFEIkAZlsq2BO3qrZPs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
