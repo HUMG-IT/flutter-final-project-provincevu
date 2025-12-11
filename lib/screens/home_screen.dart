@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_final_project_provincevu/charts/bar_chart.dart';
+import 'package:flutter_final_project_provincevu/models/giao_dich_model.dart';
 import 'package:flutter_final_project_provincevu/screens/add_expense_screen.dart';
 import 'package:flutter_final_project_provincevu/services/category_service.dart';
 import 'package:flutter_final_project_provincevu/side_menu.dart';
@@ -18,12 +19,10 @@ class _HomeScreenState extends State<HomeScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final db = Localstore.instance;
 
-  // Tổng toàn bộ dữ liệu
   double totalIncomeAll = 0;
   double totalExpenseAll = 0;
   int tongSoDuAll = 0;
 
-  // Dữ liệu theo tháng được chọn
   DateTime currentMonth = DateTime(DateTime.now().year, DateTime.now().month);
   double monthlyIncome = 0;
   double monthlyExpense = 0;
@@ -59,14 +58,19 @@ class _HomeScreenState extends State<HomeScreen> {
     double totalExpense = 0;
 
     if (raw != null) {
-      raw.forEach((key, data) {
-        final amt = (data['amount'] as num?)?.toDouble() ?? 0.0;
-        if (data['type'] == 'income') {
+      // Đảm bảo luôn xử lý Map
+      for (final value in raw.values) {
+        // Nếu value là Transaction (object), chuyển lại sang Map
+        final map = value is Map<String, dynamic>
+            ? value
+            : (value as Transaction).toMap();
+        final amt = (map['amount'] as num?)?.toDouble() ?? 0.0;
+        if (map['type'] == 'income') {
           totalIncome += amt;
-        } else if (data['type'] == 'expense') {
+        } else if (map['type'] == 'expense') {
           totalExpense += amt;
         }
-      });
+      }
     }
 
     setState(() {
@@ -83,17 +87,23 @@ class _HomeScreenState extends State<HomeScreen> {
     double me = 0;
 
     if (raw != null) {
-      raw.forEach((key, data) {
-        final txDate = DateTime.parse(data['date']);
+      for (final value in raw.values) {
+        final map = value is Map<String, dynamic>
+            ? value
+            : (value as Transaction).toMap();
+        final dateRaw = map['date'];
+        final txDate = dateRaw is DateTime
+            ? dateRaw
+            : DateTime.parse(dateRaw.toString());
         if (txDate.month == monthYear.month && txDate.year == monthYear.year) {
-          final amt = (data['amount'] as num?)?.toDouble() ?? 0.0;
-          if (data['type'] == 'income') {
+          final amt = (map['amount'] as num?)?.toDouble() ?? 0.0;
+          if (map['type'] == 'income') {
             mi += amt;
-          } else if (data['type'] == 'expense') {
+          } else if (map['type'] == 'expense') {
             me += amt;
           }
         }
-      });
+      }
     }
 
     setState(() {
@@ -103,25 +113,31 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  // Chi tiêu 7 ngày gần đây
+  // Chi tiêu 7 ngày gần đây - cũng đọc ra Map cho an toàn
   Future<List<Map<String, dynamic>>> _loadDailyExpense7Days() async {
     final raw = await db.collection('transactions').get();
     final now = DateTime.now();
     final Map<String, double> dailyExpenses = {};
 
     if (raw != null) {
-      raw.forEach((key, data) {
-        if (data['type'] == 'expense') {
-          final txDate = DateTime.parse(data['date']);
+      for (final value in raw.values) {
+        final map = value is Map<String, dynamic>
+            ? value
+            : (value as Transaction).toMap();
+        if (map['type'] == 'expense') {
+          final dateRaw = map['date'];
+          final txDate = dateRaw is DateTime
+              ? dateRaw
+              : DateTime.parse(dateRaw.toString());
           final dateKey =
               "${txDate.year.toString().padLeft(4, '0')}-${txDate.month.toString().padLeft(2, '0')}-${txDate.day.toString().padLeft(2, '0')}";
           final last7days = now.subtract(const Duration(days: 6));
           if (!txDate.isBefore(last7days) && !txDate.isAfter(now)) {
-            final amt = (data['amount'] as num?)?.toDouble() ?? 0.0;
+            final amt = (map['amount'] as num?)?.toDouble() ?? 0.0;
             dailyExpenses[dateKey] = (dailyExpenses[dateKey] ?? 0.0) + amt;
           }
         }
-      });
+      }
     }
 
     final result = <Map<String, dynamic>>[];
@@ -197,10 +213,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         await _loadFinanceForMonth(monthYear);
                         setState(() {});
                       },
-                      onUpdate: () async {
-                        await _loadFinanceForMonth(currentMonth);
-                        setState(() {});
-                      },
                     ),
                     const SizedBox(height: 20),
 
@@ -273,15 +285,9 @@ class _HomeScreenState extends State<HomeScreen> {
             MaterialPageRoute(builder: (context) => const AddExpenseScreen()),
           );
           if (result != null) {
-            final id = DateTime.now().millisecondsSinceEpoch.toString();
-            await db.collection('transactions').doc(id).set({
-              'amount': result['amount'],
-              'type': result['type'],
-              'categoryId': result['categoryId'],
-              'categoryName': result['categoryName'],
-              'date': result['date'],
-              'note': result['note'],
-            });
+            // luôn dùng model toMap để lưu vào localstore, đảm bảo luôn là Map khi đọc lại
+            final tx = result as Transaction;
+            await db.collection('transactions').doc(tx.id).set(tx.toMap());
             await _loadOverallBalances();
             await _loadFinanceForMonth(currentMonth);
             setState(() {});

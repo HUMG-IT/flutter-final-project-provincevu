@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_final_project_provincevu/charts/pie_chart.dart';
+import 'package:flutter_final_project_provincevu/screens/statistic_month_screen.dart';
 import 'package:flutter_final_project_provincevu/utils/currency.dart';
 
 typedef OnMonthChanged = void Function(DateTime monthYear);
@@ -9,7 +10,6 @@ class FinanceSummaryCard extends StatelessWidget {
   final double monthlyExpense;
   final DateTime currentMonth; // Tháng đang chọn
   final OnMonthChanged onMonthChanged;
-  final VoidCallback? onUpdate;
 
   const FinanceSummaryCard({
     super.key,
@@ -17,7 +17,6 @@ class FinanceSummaryCard extends StatelessWidget {
     required this.monthlyExpense,
     required this.currentMonth,
     required this.onMonthChanged,
-    this.onUpdate,
   });
 
   String get _monthLabel =>
@@ -136,14 +135,27 @@ class FinanceSummaryCard extends StatelessWidget {
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
                   ),
                   const Spacer(),
-                  if (onUpdate != null)
-                    TextButton(
-                      onPressed: onUpdate,
-                      child: const Text(
-                        'chi tiết',
-                        style: TextStyle(fontSize: 13),
-                      ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const StatisticMonthScreen(),
+                        ),
+                      );
+                    },
+                    child: Row(
+                      children: [
+                        const Text('chi tiết', style: TextStyle(fontSize: 13)),
+                        const SizedBox(width: 4),
+                        Icon(
+                          Icons.arrow_forward_ios,
+                          size: 12,
+                          color: Colors.grey[600],
+                        ),
+                      ],
                     ),
+                  ),
                 ],
               ),
               Row(

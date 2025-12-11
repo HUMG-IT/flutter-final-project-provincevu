@@ -32,9 +32,37 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
 
   String _type = 'expense'; // 'expense' | 'income'
   Category? _selectedCategory;
-  DateTime _selectedDateTime = DateTime.now();
 
-  List<Category> _categories = []; // sẽ dùng dữ liệu từ Localstore
+  // Chỉ dùng ngày (không dùng giờ/phút). Mặc định là hôm nay.
+  DateTime _selectedDate = DateTime.now();
+
+  // Tùy chọn nhanh: 3 ngày gần nhất (hôm nay, hôm qua, hôm kia)
+  late final List<DateTime> _quickDates;
+  int _selectedQuickIndex = 0; // 0: hôm nay, 1: hôm qua, 2: hôm kia
+
+  List<Category> _categories = []; // dữ liệu từ Localstore
+
+  @override
+  void initState() {
+    super.initState();
+    // Khởi tạo 3 ngày gần nhất
+    final today = DateTime.now();
+    _quickDates = [
+      DateTime(today.year, today.month, today.day), // hôm nay
+      DateTime(
+        today.subtract(const Duration(days: 1)).year,
+        today.subtract(const Duration(days: 1)).month,
+        today.subtract(const Duration(days: 1)).day,
+      ), // hôm qua
+      DateTime(
+        today.subtract(const Duration(days: 2)).year,
+        today.subtract(const Duration(days: 2)).month,
+        today.subtract(const Duration(days: 2)).day,
+      ), // hôm kia
+    ];
+    _selectedDate = _quickDates[_selectedQuickIndex];
+    _fetchCategories();
+  }
 
   bool get _isFormValid {
     final amount = _parseAmount(_amountController.text);
@@ -70,39 +98,38 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     return _categories.where((c) => c.type == _type).take(8).toList();
   }
 
-  Future<void> _pickDateTime() async {
+  // Chỉ chọn ngày (không chọn giờ/phút) và KHÔNG được vượt quá ngày hiện tại
+  Future<void> _pickDateOnly() async {
+    final DateTime today = DateTime.now();
     final DateTime? date = await showDatePicker(
       context: context,
-      initialDate: _selectedDateTime,
+      initialDate: _selectedDate.isAfter(today)
+          ? DateTime(today.year, today.month, today.day)
+          : _selectedDate,
       firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
+      lastDate: DateTime(
+        today.year,
+        today.month,
+        today.day,
+      ), // CHẶN ngày tương lai
     );
-    if (date == null || !mounted) return;
+    if (!mounted || date == null) return;
 
-    final TimeOfDay? time = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.fromDateTime(_selectedDateTime),
-    );
-    if (!mounted) return;
+    // Đảm bảo ngày chọn không vượt quá hôm nay (phòng trường hợp time zone)
+    final safeDate = date.isAfter(today)
+        ? DateTime(today.year, today.month, today.day)
+        : DateTime(date.year, date.month, date.day);
 
     setState(() {
-      if (time != null) {
-        _selectedDateTime = DateTime(
-          date.year,
-          date.month,
-          date.day,
-          time.hour,
-          time.minute,
-        );
-      } else {
-        _selectedDateTime = DateTime(
-          date.year,
-          date.month,
-          date.day,
-          _selectedDateTime.hour,
-          _selectedDateTime.minute,
-        );
-      }
+      _selectedDate = safeDate;
+      // Đồng bộ lại lựa chọn nhanh nếu trùng một trong 3 ngày
+      final idx = _quickDates.indexWhere(
+        (d) =>
+            d.year == _selectedDate.year &&
+            d.month == _selectedDate.month &&
+            d.day == _selectedDate.day,
+      );
+      _selectedQuickIndex = idx >= 0 ? idx : -1; // -1: ngày tùy chọn
     });
   }
 
@@ -117,23 +144,20 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       amount: amount,
       type: _type,
       category: _selectedCategory!.name,
-      date: _selectedDateTime,
+      date: DateTime(
+        _selectedDate.year,
+        _selectedDate.month,
+        _selectedDate.day,
+      ), // chỉ ngày (00:00)
       note: _noteController.text.trim(),
     );
 
-    // Ghi vào Localstore
     await db.collection('transactions').doc(id).set(transaction.toMap());
-
-    Navigator.of(
-      context,
-    ).pop(transaction); // Có thể trả về cho HomeScreen cập nhật giao diện!
+    Navigator.of(context).pop(transaction);
   }
 
-  @override
-  void initState() {
-    super.initState();
-    _fetchCategories();
-  }
+  String _formatDate(DateTime d) =>
+      '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
   @override
   void dispose() {
@@ -230,6 +254,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
               ),
               const SizedBox(height: 16),
 
+              // Categories: 2 rows * 4 expanded each
               if (categories.isNotEmpty) ...[
                 _CategoryRow(
                   categories: row1,
@@ -261,33 +286,101 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Chọn ngày giờ giao dịch
-              InkWell(
-                onTap: _pickDateTime,
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.calendar_today,
-                      size: 18,
-                      color: Colors.blueGrey,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      '${_selectedDateTime.year}-${_selectedDateTime.month.toString().padLeft(2, '0')}-${_selectedDateTime.day.toString().padLeft(2, '0')} '
-                      '${_selectedDateTime.hour.toString().padLeft(2, '0')}:${_selectedDateTime.minute.toString().padLeft(2, '0')}',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
+              // Chọn ngày giao dịch (tùy chọn nhanh + chọn ngày thủ công, KHÔNG vượt quá hôm nay)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Ngày giao dịch',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ChoiceChip(
+                          label: const Text('Hôm nay'),
+                          selected: _selectedQuickIndex == 0,
+                          onSelected: (selected) {
+                            if (selected) {
+                              setState(() {
+                                _selectedQuickIndex = 0;
+                                _selectedDate = _quickDates[0];
+                              });
+                            }
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: ChoiceChip(
+                          label: const Text('Hôm qua'),
+                          selected: _selectedQuickIndex == 1,
+                          onSelected: (selected) {
+                            if (selected) {
+                              setState(() {
+                                _selectedQuickIndex = 1;
+                                _selectedDate = _quickDates[1];
+                              });
+                            }
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: ChoiceChip(
+                          label: const Text('Hôm kia'),
+                          selected: _selectedQuickIndex == 2,
+                          onSelected: (selected) {
+                            if (selected) {
+                              setState(() {
+                                _selectedQuickIndex = 2;
+                                _selectedDate = _quickDates[2];
+                              });
+                            }
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  InkWell(
+                    onTap: _pickDateOnly,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 12,
+                        horizontal: 12,
+                      ),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey.shade300),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.calendar_today,
+                            size: 18,
+                            color: Colors.blueGrey,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            _formatDate(_selectedDate),
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const Spacer(),
+                          const Icon(
+                            Icons.edit_calendar,
+                            size: 18,
+                            color: Colors.grey,
+                          ),
+                        ],
                       ),
                     ),
-                    const Spacer(),
-                    const Icon(
-                      Icons.edit_calendar,
-                      size: 18,
-                      color: Colors.grey,
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
 
               const Spacer(),
