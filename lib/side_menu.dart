@@ -14,7 +14,7 @@ class AppSideMenu extends StatelessWidget {
     _MenuItem(Icons.pie_chart, 'Thống kê theo tháng'),
     _MenuItem(Icons.list_alt, 'Thống kê theo danh mục'),
     _MenuItem(Icons.backup, 'Sao lưu & Khôi phục'),
-    _MenuItem(Icons.settings, 'Cài đặt'),
+    // _MenuItem(Icons.settings, 'Cài đặt'),
   ];
 
   // Danh sách màn hình tương ứng
@@ -28,12 +28,10 @@ class AppSideMenu extends StatelessWidget {
   ];
 
   void _onSelect(BuildContext context, int index) {
-    // Đóng Drawer
-    Navigator.of(context).pop();
-    // Điều hướng đến màn hình tương ứng mà không xóa toàn bộ stack
+    Navigator.of(context).pop(); // Đóng Drawer
     Navigator.of(
       context,
-    ).push(MaterialPageRoute(builder: (context) => _screens[index]));
+    ).pushReplacement(MaterialPageRoute(builder: (context) => _screens[index]));
   }
 
   @override

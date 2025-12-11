@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_final_project_provincevu/services/syns_data.dart';
+import 'package:flutter_final_project_provincevu/side_menu.dart';
 
 class BackupRestoreScreen extends StatefulWidget {
   const BackupRestoreScreen({super.key});
@@ -9,10 +10,11 @@ class BackupRestoreScreen extends StatefulWidget {
 }
 
 class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
-  final DataSyncService dataSyncService = DataSyncService(); // Khởi tạo service
-  bool _loading = false; // Trạng thái tải
+  final DataSyncService dataSyncService =
+      DataSyncService(); // Service cho việc đồng bộ
+  bool _loading = false; // Trạng thái đang thực hiện
 
-  /// Thực hiện sao lưu dữ liệu lên Firebase
+  /// Sao lưu dữ liệu lên Firebase
   Future<void> _performBackup() async {
     setState(() => _loading = true);
 
@@ -40,18 +42,14 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
     }
   }
 
-  /// Thực hiện khôi phục dữ liệu từ Firebase về Localstore
-  // Trong BackupRestoreScreen, sau khi restore
+  /// Khôi phục dữ liệu từ Firebase về Local
   Future<void> _performRestore() async {
     setState(() => _loading = true);
 
     try {
       await dataSyncService.restoreFromFirebase();
 
-      // Sau khi restore xong, gọi reload dữ liệu cho HomeScreen
-      // Cách đơn giản nhất là truyền callback hoặc dùng Navigator để pop về home rồi reload, ví dụ:
-      // Navigator.of(context).pop(); // Nếu backupRestore là màn phụ
-      // Hoặc force reload HomeScreen
+      // Xử lý sau khi khôi phục thành công
       if (mounted) {
         setState(() => _loading = false);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -60,8 +58,6 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
             backgroundColor: Colors.green,
           ),
         );
-        // Sau khi khôi phục xong, reload HomeScreen
-        // Đơn giản nhất: gọi reload khi pop về Home (ví dụ truyền callback khi mở BackupRestoreScreen)
       }
     } catch (e) {
       if (mounted) {
@@ -79,6 +75,8 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // Side menu (Drawer) cho phép mở danh mục
+      drawer: AppSideMenu(),
       appBar: AppBar(
         title: const Text("Sao lưu & Khôi phục"),
         centerTitle: true,
@@ -88,14 +86,17 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const Text(
                   "Bạn có thể sao lưu và khôi phục dữ liệu của mình trên Firebase.\n"
-                  "Dữ liệu được ghép từ nhiều bộ sưu tập (collections) hiện tại.",
+                  "Dữ liệu bao gồm các giao dịch, ví và danh mục hiện có.",
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 14),
                 ),
                 const SizedBox(height: 40),
+
+                // Nút sao lưu
                 ElevatedButton.icon(
                   onPressed: !_loading ? _performBackup : null,
                   icon: const Icon(Icons.cloud_upload),
@@ -105,6 +106,8 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
                   ),
                 ),
                 const SizedBox(height: 20),
+
+                // Nút khôi phục
                 ElevatedButton.icon(
                   onPressed: !_loading ? _performRestore : null,
                   icon: const Icon(Icons.cloud_download),
@@ -116,6 +119,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
               ],
             ),
           ),
+          // Hiển thị Progress Indicator khi đang tải
           if (_loading)
             Container(
               color: Colors.black45,
