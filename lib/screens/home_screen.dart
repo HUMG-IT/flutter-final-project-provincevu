@@ -1,40 +1,41 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_final_project_provincevu/charts/bar_chart.dart';
+import 'package:flutter_final_project_provincevu/screens/add_expense_screen.dart';
 import 'package:flutter_final_project_provincevu/services/category_service.dart';
 import 'package:flutter_final_project_provincevu/side_menu.dart';
-// import 'package:flutter_final_project_provincevu/charts/pie_chart.dart';
 import 'package:flutter_final_project_provincevu/utils/currency.dart'
     as currency;
 import 'package:flutter_final_project_provincevu/widgets/finance_summary_card.dart';
 import 'package:localstore/localstore.dart';
 
-/// Home screen – Stateful
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
-
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  /// Key để mở Drawer từ IconButton
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-
-  /// Localstore instance
   final db = Localstore.instance;
 
-  /// State: Thu nhập, Chi tiêu, Tổng số dư và dữ liệu chi theo ngày
-  double thuNhap = 0; // Thu nhập
-  double chiTieu = 0; // Chi tiêu
-  int tongSoDu = 0; // Tổng số dư = thuNhap - chiTieu
-  Map<String, dynamic> _spendingDocs = {}; // bản đồ {date: {amount: ...}}
+  // Tổng toàn bộ dữ liệu
+  double totalIncomeAll = 0;
+  double totalExpenseAll = 0;
+  int tongSoDuAll = 0;
 
-  /// Stream lắng nghe thay đổi dữ liệu spending (tùy chọn)
-  Stream<Map<String, dynamic>>? _spendingStream;
+  // Dữ liệu theo tháng được chọn
+  DateTime currentMonth = DateTime(DateTime.now().year, DateTime.now().month);
+  double monthlyIncome = 0;
+  double monthlyExpense = 0;
 
-  // ========= Helpers cho định dạng VND =========
+  @override
+  void initState() {
+    super.initState();
+    CategoryService().initializeDefaultCategories();
+    _loadOverallBalances();
+    _loadFinanceForMonth(currentMonth);
+  }
 
-  // Định dạng hiển thị tiền VND dùng utils
   Widget vndText(
     num amount, {
     Color? color,
@@ -51,124 +52,96 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // khởi tạo dữ liệu
-  @override
-  void initState() {
-    super.initState();
-    CategoryService()
-        .initializeDefaultCategories(); // Khởi tạo danh mục mặc định nếu cần
-    _initLoad(); // Hàm sẵn có của bạn để tải dữ liệu (finance, spending)
-  }
+  // Tổng hợp toàn bộ income/expense
+  Future<void> _loadOverallBalances() async {
+    final raw = await db.collection('transactions').get();
+    double totalIncome = 0;
+    double totalExpense = 0;
 
-  /// Tải dữ liệu từ Localstore (finance/totals và collection spending)
-  Future<void> _initLoad() async {
-    await _loadFinance();
-    await _loadSpending();
-
-    // Khởi tạo stream để lắng nghe thay đổi nếu muốn UI tự động cập nhật
-    _spendingStream = db.collection('spending').stream;
-    _spendingStream?.listen((event) {
-      // event có dạng {docId: {amount: ...}}
-      setState(() {
-        _spendingDocs.addAll(event);
+    if (raw != null) {
+      raw.forEach((key, data) {
+        final amt = (data['amount'] as num?)?.toDouble() ?? 0.0;
+        if (data['type'] == 'income') {
+          totalIncome += amt;
+        } else if (data['type'] == 'expense') {
+          totalExpense += amt;
+        }
       });
-    });
-  }
+    }
 
-  /// Load Thu nhập/Chi tiêu từ doc finance/totals
-  Future<void> _loadFinance() async {
-    final totals = await db.collection('finance').doc('totals').get();
     setState(() {
-      thuNhap = (totals?['income'] as num?)?.toDouble() ?? 10000000;
-      chiTieu = (totals?['expenses'] as num?)?.toDouble() ?? 4500000;
-      tongSoDu = (thuNhap - chiTieu).toInt();
+      totalIncomeAll = totalIncome;
+      totalExpenseAll = totalExpense;
+      tongSoDuAll = (totalIncome - totalExpense).toInt();
     });
   }
 
-  /// Load dữ liệu chi tiêu từng ngày từ collection spending
-  Future<void> _loadSpending() async {
-    final docs = await db.collection('spending').get();
+  // Tổng hợp theo tháng được chọn
+  Future<void> _loadFinanceForMonth(DateTime monthYear) async {
+    final raw = await db.collection('transactions').get();
+    double mi = 0;
+    double me = 0;
+
+    if (raw != null) {
+      raw.forEach((key, data) {
+        final txDate = DateTime.parse(data['date']);
+        if (txDate.month == monthYear.month && txDate.year == monthYear.year) {
+          final amt = (data['amount'] as num?)?.toDouble() ?? 0.0;
+          if (data['type'] == 'income') {
+            mi += amt;
+          } else if (data['type'] == 'expense') {
+            me += amt;
+          }
+        }
+      });
+    }
+
     setState(() {
-      _spendingDocs = docs ?? {};
+      currentMonth = DateTime(monthYear.year, monthYear.month);
+      monthlyIncome = mi;
+      monthlyExpense = me;
     });
   }
 
-  /// Save Thu nhập/Chi tiêu vào finance/totals
-  Future<void> _saveFinance() async {
-    await db.collection('finance').doc('totals').set({
-      'income': thuNhap,
-      'expenses': chiTieu,
-      'updated_at': DateTime.now().toIso8601String(),
-    });
-    setState(() {
-      tongSoDu = (thuNhap - chiTieu).toInt();
-    });
-  }
-
-  /// Thêm chi tiêu cho một ngày (nếu có sẵn thì cộng dồn)
-  Future<void> _addDailySpending(String date, double amount) async {
-    final existing = _spendingDocs[date];
-    final currentAmount = (existing?['amount'] as num?)?.toDouble() ?? 0.0;
-    final newAmount = currentAmount + amount;
-    await db.collection('spending').doc(date).set({
-      'amount': newAmount,
-      'updated_at': DateTime.now().toIso8601String(),
-    });
-    await _loadSpending();
-  }
-
-  /// Lấy 7 ngày gần nhất để hiển thị cho BarChartWidget (từ Localstore)
-  List<Map<String, dynamic>> getSpendingDataFromLocalstore() {
-    // _spendingDocs có dạng { 'YYYY-MM-DD': { 'amount': <double> }, ... }
-    final entries = _spendingDocs.entries.map((e) {
-      final value = e.value;
-      return {
-        'day': e.key,
-        'amount': (value is Map && value['amount'] is num)
-            ? (value['amount'] as num).toDouble()
-            : 0.0,
-      };
-    }).toList();
-
-    // Sắp xếp theo ngày tăng dần để lấy 7 gần nhất theo thứ tự
-    entries.sort((a, b) => (a['day'] as String).compareTo(b['day'] as String));
-
-    // Lấy 7 cuối cùng (gần nhất), rồi đảm bảo thứ tự từ cũ đến mới
-    final last7 = entries.length <= 7
-        ? entries
-        : entries.sublist(entries.length - 7);
-    return last7;
-  }
-
-  /// Demo: thêm chi tiêu ngày hôm nay 300.000 đ
-  Future<void> _demoAddToday() async {
+  // Chi tiêu 7 ngày gần đây
+  Future<List<Map<String, dynamic>>> _loadDailyExpense7Days() async {
+    final raw = await db.collection('transactions').get();
     final now = DateTime.now();
-    final date =
-        "${now.year.toString().padLeft(4, '0')}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
-    await _addDailySpending(date, 300000);
-  }
+    final Map<String, double> dailyExpenses = {};
 
-  /// Demo: cập nhật Thu nhập/Chi tiêu
-  Future<void> _demoUpdateFinance() async {
-    // Ví dụ chỉnh tăng thu nhập thêm 1 triệu
-    setState(() {
-      thuNhap += 1000000;
-    });
-    await _saveFinance();
+    if (raw != null) {
+      raw.forEach((key, data) {
+        if (data['type'] == 'expense') {
+          final txDate = DateTime.parse(data['date']);
+          final dateKey =
+              "${txDate.year.toString().padLeft(4, '0')}-${txDate.month.toString().padLeft(2, '0')}-${txDate.day.toString().padLeft(2, '0')}";
+          final last7days = now.subtract(const Duration(days: 6));
+          if (!txDate.isBefore(last7days) && !txDate.isAfter(now)) {
+            final amt = (data['amount'] as num?)?.toDouble() ?? 0.0;
+            dailyExpenses[dateKey] = (dailyExpenses[dateKey] ?? 0.0) + amt;
+          }
+        }
+      });
+    }
+
+    final result = <Map<String, dynamic>>[];
+    for (int i = 6; i >= 0; i--) {
+      final day = now.subtract(Duration(days: i));
+      final dateKey =
+          "${day.year.toString().padLeft(4, '0')}-${day.month.toString().padLeft(2, '0')}-${day.day.toString().padLeft(2, '0')}";
+      result.add({'day': dateKey, 'amount': dailyExpenses[dateKey] ?? 0.0});
+    }
+    return result;
   }
 
   @override
   Widget build(BuildContext context) {
-    final spendingData = getSpendingDataFromLocalstore();
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
       key: _scaffoldKey,
-
-      // Drawer (menu bên trái)
       drawer: AppSideMenu(),
-
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -180,15 +153,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 child: Column(
                   children: [
-                    // Thanh trên cùng: menu, số dư, đổi giao diện
+                    // Header: Tổng số dư toàn bộ
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         IconButton(
-                          onPressed: () {
-                            // Mở Drawer
-                            _scaffoldKey.currentState?.openDrawer();
-                          },
+                          onPressed: () =>
+                              _scaffoldKey.currentState?.openDrawer(),
                           icon: const Icon(Icons.menu),
                         ),
                         Column(
@@ -202,7 +173,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ),
                             vndText(
-                              tongSoDu,
+                              tongSoDuAll,
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
                               color: Colors.black,
@@ -217,15 +188,23 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     const SizedBox(height: 20),
 
-                    // Biểu đồ tròn hiển thị phần trăm chi tiêu + tiêu đề và tháng/năm
+                    // Sơ lược theo tháng (Pie + thống kê tháng)
                     FinanceSummaryCard(
-                      thuNhap: thuNhap,
-                      chiTieu: chiTieu,
-                      onUpdate: _demoUpdateFinance,
+                      monthlyIncome: monthlyIncome,
+                      monthlyExpense: monthlyExpense,
+                      currentMonth: currentMonth,
+                      onMonthChanged: (monthYear) async {
+                        await _loadFinanceForMonth(monthYear);
+                        setState(() {});
+                      },
+                      onUpdate: () async {
+                        await _loadFinanceForMonth(currentMonth);
+                        setState(() {});
+                      },
                     ),
                     const SizedBox(height: 20),
 
-                    // Biểu đồ cột: dữ liệu từ Localstore
+                    // BarChart: Chi tiêu 7 ngày gần đây
                     SizedBox(
                       height: 200,
                       child: Card(
@@ -238,40 +217,41 @@ class _HomeScreenState extends State<HomeScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Row(
+                              const Row(
                                 children: [
-                                  const Text(
+                                  Text(
                                     'Chi tiêu 7 ngày gần đây',
                                     style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w800,
                                     ),
                                   ),
-                                  const Spacer(),
-                                  TextButton(
-                                    onPressed: _demoAddToday,
-                                    style: TextButton.styleFrom(
-                                      textStyle: const TextStyle(fontSize: 14),
-                                    ),
-                                    child: const Row(
-                                      children: [
-                                        Text("chi tiết"),
-                                        SizedBox(width: 6),
-                                        Icon(
-                                          Icons.arrow_forward_ios,
-                                          size: 12,
-                                          color: Colors.grey,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
+                                  Spacer(),
                                 ],
                               ),
                               const SizedBox(height: 12),
                               Expanded(
-                                child: BarChartWidget(
-                                  spendingData: spendingData,
-                                ),
+                                child:
+                                    FutureBuilder<List<Map<String, dynamic>>>(
+                                      future: _loadDailyExpense7Days(),
+                                      builder: (context, snapshot) {
+                                        if (snapshot.connectionState ==
+                                            ConnectionState.waiting) {
+                                          return const Center(
+                                            child: CircularProgressIndicator(),
+                                          );
+                                        }
+                                        if (!snapshot.hasData) {
+                                          return const Center(
+                                            child: Text('Không có dữ liệu.'),
+                                          );
+                                        }
+                                        final spendingData = snapshot.data!;
+                                        return BarChartWidget(
+                                          spendingData: spendingData,
+                                        );
+                                      },
+                                    ),
                               ),
                             ],
                           ),
@@ -279,51 +259,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                     const SizedBox(height: 20),
-
-                    // Danh sách các danh mục – ví dụ hiển thị chi của hôm nay
-                    ListView.builder(
-                      itemCount: _spendingDocs.length,
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemBuilder: (context, index) {
-                        final entry = _spendingDocs.entries.elementAt(index);
-                        final date = entry.key;
-                        final amount =
-                            (entry.value is Map && entry.value['amount'] is num)
-                            ? (entry.value['amount'] as num).toDouble()
-                            : 0.0;
-
-                        return ListTile(
-                          leading: CircleAvatar(
-                            backgroundColor: Colors.redAccent.withValues(
-                              alpha: 0.1,
-                            ),
-                            child: const Icon(
-                              Icons.calendar_today,
-                              color: Colors.redAccent,
-                            ),
-                          ),
-                          title: Text('Ngày $date'),
-                          subtitle: Row(
-                            children: [
-                              const Text('Tiền đã chi: '),
-                              vndText(
-                                amount,
-                                color: Colors.black,
-                                fontSize: 14,
-                              ),
-                            ],
-                          ),
-                          trailing: vndText(
-                            amount,
-                            color: Colors.red,
-                            fontSize: 14,
-                            negative: true,
-                          ),
-                          onTap: () {},
-                        );
-                      },
-                    ),
                   ],
                 ),
               ),
@@ -331,36 +266,29 @@ class _HomeScreenState extends State<HomeScreen> {
           },
         ),
       ),
-      // nút hình tròn
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // hiển thị 1 dialog để thêm chi tiêu
-          _showAddExpenseDialog();
+        onPressed: () async {
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const AddExpenseScreen()),
+          );
+          if (result != null) {
+            final id = DateTime.now().millisecondsSinceEpoch.toString();
+            await db.collection('transactions').doc(id).set({
+              'amount': result['amount'],
+              'type': result['type'],
+              'categoryId': result['categoryId'],
+              'categoryName': result['categoryName'],
+              'date': result['date'],
+              'note': result['note'],
+            });
+            await _loadOverallBalances();
+            await _loadFinanceForMonth(currentMonth);
+            setState(() {});
+          }
         },
         child: const Icon(Icons.add),
       ),
-    );
-  }
-
-  void _showAddExpenseDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Thêm chi tiêu'),
-          content: const Text(
-            'Nội dung thêm chi tiêu sẽ được triển khai ở đây.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Đóng'),
-            ),
-          ],
-        );
-      },
     );
   }
 }
