@@ -17,8 +17,6 @@ class CategoryService {
             .set(category.toMap());
       }
       print('Danh mục mặc định đã được tạo.');
-    } else {
-      print('Danh mục đã tồn tại.');
     }
   }
 }
