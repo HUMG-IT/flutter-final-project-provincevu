@@ -1,63 +1,69 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_final_project_provincevu/screens/backup_restore_screen.dart';
-import 'package:flutter_final_project_provincevu/screens/home_screen.dart';
-import 'package:flutter_final_project_provincevu/screens/statistic_category_screen.dart';
-import 'package:flutter_final_project_provincevu/screens/statistic_month_screen.dart';
+import 'package:frontend/screens/backup_restore_screen.dart';
+import 'package:frontend/screens/home_screen.dart';
+import 'package:frontend/screens/settings_screen.dart';
+import 'package:frontend/screens/statistic_category_screen.dart';
+import 'package:frontend/screens/statistic_month_screen.dart';
+import 'package:frontend/screens/transaction_history_screen.dart';
+import 'package:frontend/utils/app_strings.dart';
 
 /// Drawer menu bên trái – điều hướng đến màn hình tương ứng và loại bỏ nút "quay lại"
 class AppSideMenu extends StatelessWidget {
-  AppSideMenu({super.key});
-
-  // Danh sách item menu
-  final List<_MenuItem> _menuItems = const [
-    _MenuItem(Icons.home, 'Trang chủ'),
-    _MenuItem(Icons.pie_chart, 'Thống kê theo tháng'),
-    _MenuItem(Icons.list_alt, 'Thống kê theo danh mục'),
-    _MenuItem(Icons.backup, 'Sao lưu & Khôi phục'),
-    // _MenuItem(Icons.settings, 'Cài đặt'),
-  ];
-
-  // Danh sách màn hình tương ứng
-  final List<Widget> _screens = [
-    const HomeScreen(), // Màn hình trang chủ
-    const StatisticMonthScreen(), // Màn hình Thống kê
-    const StatisticCategoryScreen(), // Màn hình Danh mục
-    const BackupRestoreScreen(),
-    // const SettingsScreen(), // Màn hình Cài đặt
-    // const AboutScreen(), // Màn hình Giới thiệu
-  ];
-
-  void _onSelect(BuildContext context, int index) {
-    Navigator.of(context).pop(); // Đóng Drawer
-    Navigator.of(
-      context,
-    ).pushReplacement(MaterialPageRoute(builder: (context) => _screens[index]));
-  }
+  const AppSideMenu({super.key});
 
   @override
   Widget build(BuildContext context) {
+    // Danh sách item menu với i18n
+    final menuItems = [
+      _MenuItem(Icons.home, AppStrings.home),
+      _MenuItem(Icons.pie_chart, AppStrings.statisticByMonth),
+      _MenuItem(Icons.list_alt, AppStrings.statisticByCategory),
+      _MenuItem(Icons.history, AppStrings.transactionHistory),
+      _MenuItem(Icons.backup, AppStrings.backupRestore),
+      _MenuItem(Icons.settings, AppStrings.settings),
+    ];
+
+    // Danh sách màn hình tương ứng
+    final screens = <Widget>[
+      const HomeScreen(),
+      const StatisticMonthScreen(),
+      const StatisticCategoryScreen(),
+      const TransactionHistoryScreen(),
+      const BackupRestoreScreen(),
+      const SettingsScreen(),
+    ];
+
+    void onSelect(int index) {
+      Navigator.of(context).pop(); // Đóng Drawer
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => screens[index]),
+      );
+    }
+
     return Drawer(
       child: SafeArea(
         child: Column(
           children: [
-            const UserAccountsDrawerHeader(
-              currentAccountPicture: CircleAvatar(child: Icon(Icons.person)),
-              accountName: Text('Province Vu'),
-              accountEmail: Text('provincevu@example.com'),
+            UserAccountsDrawerHeader(
+              currentAccountPicture: const CircleAvatar(
+                child: Icon(Icons.person),
+              ),
+              accountName: const Text('Province Vu'),
+              accountEmail: const Text('provincevu@example.com'),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary,
+              ),
             ),
             Expanded(
               child: ListView.separated(
-                itemCount: _menuItems.length,
+                itemCount: menuItems.length,
                 separatorBuilder: (_, __) => const Divider(height: 1),
                 itemBuilder: (context, index) {
-                  final item = _menuItems[index]; // Lấy Item Menu
+                  final item = menuItems[index];
                   return ListTile(
-                    leading: Icon(
-                      item.icon,
-                    ), // Mặc định giữ nguyên màu cho Icon
-                    title: Text(item.title), // Mặc định giữ nguyên màu cho Text
-                    // Khi chọn item, trigger `_onSelect`
-                    onTap: () => _onSelect(context, index),
+                    leading: Icon(item.icon),
+                    title: Text(item.title),
+                    onTap: () => onSelect(index),
                   );
                 },
               ),

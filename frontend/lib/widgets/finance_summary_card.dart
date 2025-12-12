@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_final_project_provincevu/charts/pie_chart.dart';
-import 'package:flutter_final_project_provincevu/screens/statistic_month_screen.dart';
-import 'package:flutter_final_project_provincevu/utils/currency.dart';
+import 'package:frontend/charts/pie_chart.dart';
+import 'package:frontend/screens/statistic_month_screen.dart';
+import 'package:frontend/utils/app_strings.dart';
+import 'package:frontend/utils/app_theme.dart';
+import 'package:frontend/utils/currency.dart';
 
 typedef OnMonthChanged = void Function(DateTime monthYear);
 
@@ -20,7 +22,7 @@ class FinanceSummaryCard extends StatelessWidget {
   });
 
   String get _monthLabel =>
-      'Tháng ${currentMonth.month.toString().padLeft(2, '0')}, ${currentMonth.year}';
+      '${AppStrings.isVietnamese ? "Tháng" : "Month"} ${currentMonth.month.toString().padLeft(2, '0')}, ${currentMonth.year}';
 
   void _showMonthSelectionBottomSheet(BuildContext context) {
     int selectedMonth = currentMonth.month;
@@ -36,11 +38,13 @@ class FinanceSummaryCard extends StatelessWidget {
           height: 300,
           child: Column(
             children: [
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
                 child: Text(
-                  'Chọn tháng',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  AppStrings.selectMonth,
+                  style: const TextStyle(
+                      fontSize: 18, fontWeight: FontWeight.bold),
                 ),
               ),
               const Divider(),
@@ -57,7 +61,7 @@ class FinanceSummaryCard extends StatelessWidget {
                           (i) => DropdownMenuItem(
                             value: i + 1,
                             child: Text(
-                              'Tháng ${(i + 1).toString().padLeft(2, '0')}',
+                              '${AppStrings.isVietnamese ? "Tháng" : "Month"} ${(i + 1).toString().padLeft(2, '0')}',
                             ),
                           ),
                         ),
@@ -104,7 +108,7 @@ class FinanceSummaryCard extends StatelessWidget {
                       Navigator.pop(context);
                     },
                     icon: const Icon(Icons.check),
-                    label: const Text('Áp dụng'),
+                    label: Text(AppStrings.isVietnamese ? 'Áp dụng' : 'Apply'),
                   ),
                 ),
               ),
@@ -117,12 +121,13 @@ class FinanceSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return SizedBox(
       height: 200,
       width: MediaQuery.of(context).size.width,
       child: Card(
         elevation: 4,
-        color: Colors.grey[200],
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -130,9 +135,13 @@ class FinanceSummaryCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  const Text(
-                    'Sơ lược theo tháng',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+                  Text(
+                    AppStrings.isVietnamese
+                        ? 'Sơ lược theo tháng'
+                        : 'Monthly summary',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                   const Spacer(),
                   TextButton(
@@ -146,12 +155,18 @@ class FinanceSummaryCard extends StatelessWidget {
                     },
                     child: Row(
                       children: [
-                        const Text('chi tiết', style: TextStyle(fontSize: 13)),
+                        Text(
+                          AppStrings.isVietnamese ? 'chi tiết' : 'details',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
                         const SizedBox(width: 4),
                         Icon(
                           Icons.arrow_forward_ios,
                           size: 12,
-                          color: Colors.grey[600],
+                          color: theme.colorScheme.primary,
                         ),
                       ],
                     ),
@@ -172,16 +187,14 @@ class FinanceSummaryCard extends StatelessWidget {
                             children: [
                               Text(
                                 _monthLabel,
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.black,
+                                style: theme.textTheme.bodyMedium?.copyWith(
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
-                              const Icon(
+                              Icon(
                                 Icons.arrow_drop_down,
                                 size: 18,
-                                color: Colors.grey,
+                                color: theme.iconTheme.color ?? Colors.grey,
                               ),
                             ],
                           ),
@@ -198,16 +211,20 @@ class FinanceSummaryCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  const Expanded(
+                  Expanded(
                     flex: 3,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Thu nhập:', style: TextStyle(fontSize: 12)),
-                        SizedBox(height: 6),
-                        Text('Chi tiêu:', style: TextStyle(fontSize: 12)),
-                        SizedBox(height: 13),
-                        Text('Còn lại:', style: TextStyle(fontSize: 12)),
+                        Text('${AppStrings.income}:',
+                            style: theme.textTheme.bodySmall),
+                        const SizedBox(height: 6),
+                        Text('${AppStrings.expense}:',
+                            style: theme.textTheme.bodySmall),
+                        const SizedBox(height: 13),
+                        Text(
+                            AppStrings.isVietnamese ? 'Còn lại:' : 'Remaining:',
+                            style: theme.textTheme.bodySmall),
                       ],
                     ),
                   ),
@@ -218,13 +235,13 @@ class FinanceSummaryCard extends StatelessWidget {
                       children: [
                         vndText(
                           monthlyIncome,
-                          color: Colors.green,
+                          color: AppColors.income,
                           fontSize: 12,
                         ),
                         const SizedBox(height: 6),
                         vndText(
                           monthlyExpense,
-                          color: Colors.red,
+                          color: AppColors.expense,
                           fontSize: 12,
                         ),
                         const SizedBox(height: 6),
@@ -235,7 +252,7 @@ class FinanceSummaryCard extends StatelessWidget {
                         const SizedBox(height: 6),
                         vndText(
                           monthlyIncome - monthlyExpense,
-                          color: Colors.green,
+                          color: AppColors.income,
                           fontSize: 12,
                         ),
                       ],
