@@ -1,4 +1,4 @@
-import 'package:flutter_final_project_provincevu/models/category_model.dart';
+import '../models/category_model.dart';
 
 final List<Category> defaultCategories = [
   Category(id: 'cat_001', name: 'Ăn uống', type: 'expense', icon: 'restaurant'),

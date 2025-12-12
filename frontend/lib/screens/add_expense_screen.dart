@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_final_project_provincevu/models/category_model.dart';
-import 'package:flutter_final_project_provincevu/models/giao_dich_model.dart';
+import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'package:localstore/localstore.dart';
+
+import '../models/category_model.dart';
+import '../models/giao_dich_model.dart';
 
 // Map từ String sang IconData để dùng cho Category
 const Map<String, IconData> categoryIconMap = {
@@ -19,7 +22,9 @@ const Map<String, IconData> categoryIconMap = {
 };
 
 class AddExpenseScreen extends StatefulWidget {
-  const AddExpenseScreen({super.key});
+  final Transaction? transactionToEdit;
+
+  const AddExpenseScreen({super.key, this.transactionToEdit});
 
   @override
   State<AddExpenseScreen> createState() => _AddExpenseScreenState();
@@ -32,6 +37,8 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
 
   String _type = 'expense'; // 'expense' | 'income'
   Category? _selectedCategory;
+  bool _isEditMode = false;
+  String? _editTransactionId;
 
   // Chỉ dùng ngày (không dùng giờ/phút). Mặc định là hôm nay.
   DateTime _selectedDate = DateTime.now();
@@ -41,6 +48,9 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   int _selectedQuickIndex = 0; // 0: hôm nay, 1: hôm qua, 2: hôm kia
 
   List<Category> _categories = []; // dữ liệu từ Localstore
+
+  // Formatter cho TextField số tiền
+  final _amountFormatter = ThousandsSeparatorInputFormatter();
 
   @override
   void initState() {
@@ -61,6 +71,31 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       ), // hôm kia
     ];
     _selectedDate = _quickDates[_selectedQuickIndex];
+
+    // Nếu là chế độ edit, điền sẵn dữ liệu
+    if (widget.transactionToEdit != null) {
+      _isEditMode = true;
+      _editTransactionId = widget.transactionToEdit!.id;
+      _type = widget.transactionToEdit!.type;
+      _amountController.text = widget.transactionToEdit!.amount
+          .toStringAsFixed(0)
+          .replaceAllMapped(
+            RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+            (m) => '${m[1]}.',
+          );
+      _noteController.text = widget.transactionToEdit!.note;
+      _selectedDate = widget.transactionToEdit!.date;
+
+      // Đồng bộ lựa chọn nhanh nếu trùng
+      final idx = _quickDates.indexWhere(
+        (d) =>
+            d.year == _selectedDate.year &&
+            d.month == _selectedDate.month &&
+            d.day == _selectedDate.day,
+      );
+      _selectedQuickIndex = idx >= 0 ? idx : -1;
+    }
+
     _fetchCategories();
   }
 
@@ -71,9 +106,10 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
 
   double? _parseAmount(String raw) {
     final t = raw.trim();
-    return double.tryParse(t) ??
-        double.tryParse(t.replaceAll('.', '').replaceAll(',', '.')) ??
-        double.tryParse(t.replaceAll(',', ''));
+    // Luôn coi dấu chấm là phân cách hàng nghìn (format VN)
+    // Loại bỏ tất cả dấu chấm và parse
+    final normalized = t.replaceAll('.', '').replaceAll(',', '');
+    return double.tryParse(normalized);
   }
 
   IconData _iconFromMap(String name) {
@@ -88,7 +124,19 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
 
     setState(() {
       _categories = cats;
-      if (_selectedCategory != null && _selectedCategory!.type != _type) {
+
+      // Nếu edit mode, tìm category tương ứng
+      if (_isEditMode && widget.transactionToEdit != null) {
+        final categoryName = widget.transactionToEdit!.category;
+        _selectedCategory = cats.firstWhere(
+          (c) => c.name == categoryName && c.type == _type,
+          orElse: () => cats.firstWhere(
+            (c) => c.name == categoryName,
+            orElse: () => cats.first,
+          ),
+        );
+      } else if (_selectedCategory != null &&
+          _selectedCategory!.type != _type) {
         _selectedCategory = null;
       }
     });
@@ -137,7 +185,10 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     if (!_isFormValid) return;
 
     final amount = _parseAmount(_amountController.text) ?? 0;
-    final id = DateTime.now().millisecondsSinceEpoch.toString();
+    // Nếu edit, giữ nguyên ID; nếu tạo mới, sinh ID mới
+    final id = _isEditMode
+        ? _editTransactionId!
+        : DateTime.now().millisecondsSinceEpoch.toString();
 
     final transaction = Transaction(
       id: id,
@@ -153,6 +204,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     );
 
     await db.collection('transactions').doc(id).set(transaction.toMap());
+    if (!mounted) return;
     Navigator.of(context).pop(transaction);
   }
 
@@ -178,7 +230,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
           icon: const Icon(Icons.arrow_back_ios_new, size: 18),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: const Text('Thêm giao dịch'),
+        title: Text(_isEditMode ? 'Sửa giao dịch' : 'Thêm giao dịch'),
         centerTitle: true,
       ),
       body: SafeArea(
@@ -245,6 +297,10 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                   decimal: true,
                   signed: false,
                 ),
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  _amountFormatter,
+                ],
                 decoration: const InputDecoration(
                   labelText: 'Số tiền',
                   hintText: 'Nhập số tiền',
@@ -462,6 +518,25 @@ class _CategoryRow extends StatelessWidget {
           ),
         );
       }).toList(),
+    );
+  }
+}
+
+/// Định dạng số có dấu chấm ngăn cách hàng nghìn khi nhập
+class ThousandsSeparatorInputFormatter extends TextInputFormatter {
+  final NumberFormat _formatter = NumberFormat("#,##0", "vi_VN");
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    String digits = newValue.text.replaceAll(RegExp(r'[^0-9]'), '');
+    if (digits.isEmpty) return newValue.copyWith(text: '');
+    final formatted = _formatter.format(int.parse(digits));
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
     );
   }
 }

@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_final_project_provincevu/charts/pie_chart.dart';
-import 'package:flutter_final_project_provincevu/side_menu.dart';
-import 'package:flutter_final_project_provincevu/utils/currency.dart'
-    as currency;
 import 'package:localstore/localstore.dart';
+
+import '../charts/pie_chart.dart';
+import '../side_menu.dart';
+import '../utils/app_strings.dart';
+import '../utils/currency.dart' as currency;
 
 class StatisticMonthScreen extends StatefulWidget {
   const StatisticMonthScreen({super.key});
@@ -16,7 +17,7 @@ class _StatisticMonthScreenState extends State<StatisticMonthScreen> {
   final db = Localstore.instance;
 
   late final List<DateTime>
-  _months; // First day of each month, descending from current
+      _months; // First day of each month, descending from current
   final List<_MonthlySummary> _summaries = [];
   bool _loading = true;
 
@@ -123,26 +124,31 @@ class _StatisticMonthScreenState extends State<StatisticMonthScreen> {
       drawer: AppSideMenu(),
 
       appBar: AppBar(
-        title: const Text('Tổng hợp 36 tháng gần đây'),
+        title: Text(
+          AppStrings.isVietnamese
+              ? 'Tổng hợp 36 tháng gần đây'
+              : 'Last 36 months summary',
+        ),
         centerTitle: true,
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _summaries.isEmpty
-          ? const Center(child: Text('Không có dữ liệu giao dịch.'))
-          : ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              itemCount: _summaries.length,
-              itemBuilder: (context, index) {
-                final s = _summaries[index];
-                return _MonthlySummaryCard(
-                  title: _monthLabel(s.month),
-                  income: s.income,
-                  expense: s.expense,
-                  vndText: vndText,
-                );
-              },
-            ),
+              ? const Center(child: Text('Không có dữ liệu giao dịch.'))
+              : ListView.builder(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  itemCount: _summaries.length,
+                  itemBuilder: (context, index) {
+                    final s = _summaries[index];
+                    return _MonthlySummaryCard(
+                      title: _monthLabel(s.month),
+                      income: s.income,
+                      expense: s.expense,
+                      vndText: vndText,
+                    );
+                  },
+                ),
     );
   }
 }
@@ -152,7 +158,9 @@ class _MonthlySummary {
   double income;
   double expense;
 
-  _MonthlySummary({required this.month, this.income = 0.0, this.expense = 0.0});
+  _MonthlySummary({required this.month})
+      : income = 0.0,
+        expense = 0.0;
 }
 
 class _MonthlySummaryCard extends StatelessWidget {
@@ -165,8 +173,7 @@ class _MonthlySummaryCard extends StatelessWidget {
     double fontSize,
     FontWeight fontWeight,
     bool negative,
-  })
-  vndText;
+  }) vndText;
 
   const _MonthlySummaryCard({
     required this.title,
@@ -177,8 +184,11 @@ class _MonthlySummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textColor = Theme.of(context).textTheme.bodyLarge?.color;
+    final labelStyle = TextStyle(fontSize: 12, color: textColor);
+
     return Card(
-      color: Colors.grey[200],
+      // Use theme card color (works with both light/dark mode)
       elevation: 2,
       margin: const EdgeInsets.symmetric(vertical: 8),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -190,9 +200,10 @@ class _MonthlySummaryCard extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w800,
+                    color: textColor,
                   ),
                 ),
                 const Spacer(),
@@ -210,16 +221,25 @@ class _MonthlySummaryCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 12),
-                const Expanded(
+                Expanded(
                   flex: 3,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Thu nhập:', style: TextStyle(fontSize: 12)),
-                      SizedBox(height: 6),
-                      Text('Chi tiêu:', style: TextStyle(fontSize: 12)),
-                      SizedBox(height: 13),
-                      Text('Còn lại:', style: TextStyle(fontSize: 12)),
+                      Text(
+                        AppStrings.isVietnamese ? 'Thu nhập:' : 'Income:',
+                        style: labelStyle,
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        AppStrings.isVietnamese ? 'Chi tiêu:' : 'Expense:',
+                        style: labelStyle,
+                      ),
+                      const SizedBox(height: 13),
+                      Text(
+                        AppStrings.isVietnamese ? 'Còn lại:' : 'Balance:',
+                        style: labelStyle,
+                      ),
                     ],
                   ),
                 ),
@@ -239,9 +259,8 @@ class _MonthlySummaryCard extends StatelessWidget {
                       const SizedBox(height: 6),
                       vndText(
                         income - expense,
-                        color: (income - expense) >= 0
-                            ? Colors.green
-                            : Colors.red,
+                        color:
+                            (income - expense) >= 0 ? Colors.green : Colors.red,
                         fontSize: 12,
                       ),
                     ],

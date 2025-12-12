@@ -1,13 +1,13 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:frontend/providers/app_state.dart';
-import 'package:frontend/screens/home_screen.dart';
-import 'package:frontend/screens/settings_screen.dart';
-import 'package:frontend/screens/transaction_history_screen.dart';
-import 'package:frontend/seven_day_detail.dart';
-import 'package:frontend/utils/app_theme.dart';
 
 import 'firebase_options.dart';
+import 'providers/app_state.dart';
+import 'screens/home_screen.dart';
+import 'screens/settings_screen.dart';
+import 'screens/transaction_history_screen.dart';
+import 'seven_day_detail.dart';
+import 'utils/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

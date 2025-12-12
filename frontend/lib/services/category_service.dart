@@ -1,5 +1,6 @@
-import 'package:flutter_final_project_provincevu/data/default_categories.dart';
 import 'package:localstore/localstore.dart';
+
+import '../data/default_categories.dart';
 
 class CategoryService {
   final db = Localstore.instance;
@@ -16,7 +17,6 @@ class CategoryService {
             .doc(category.id)
             .set(category.toMap());
       }
-      print('Danh mục mặc định đã được tạo.');
     }
   }
 }

@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/charts/category_pie_chart.dart';
-import 'package:frontend/data/default_categories.dart';
-import 'package:frontend/models/category_model.dart';
-import 'package:frontend/models/giao_dich_model.dart';
-import 'package:frontend/screens/statistic_category_screen.dart';
-import 'package:frontend/screens/transaction_history_screen.dart';
-import 'package:frontend/utils/app_strings.dart';
-import 'package:frontend/utils/app_theme.dart';
-import 'package:frontend/utils/currency.dart' as currency;
 import 'package:localstore/localstore.dart';
+
+import '../charts/category_pie_chart.dart';
+import '../data/default_categories.dart';
+import '../models/category_model.dart';
+import '../models/giao_dich_model.dart';
+import '../screens/statistic_category_screen.dart';
+import '../screens/transaction_history_screen.dart';
+import '../utils/app_strings.dart';
+import '../utils/app_theme.dart';
+import '../utils/currency.dart' as currency;
 
 // Map từ String sang IconData để dùng cho Category
 const Map<String, IconData> categoryIconMap = {
@@ -80,7 +81,8 @@ class _Category7DaysWidgetState extends State<Category7DaysWidget> {
     final filteredTransactions = _transactions.where((tx) {
       if (tx.type != 'expense') return false;
       return !tx.date.isBefore(
-              DateTime(last7days.year, last7days.month, last7days.day)) &&
+            DateTime(last7days.year, last7days.month, last7days.day),
+          ) &&
           !tx.date.isAfter(now);
     });
 
@@ -102,11 +104,13 @@ class _Category7DaysWidgetState extends State<Category7DaysWidget> {
       final cat = categories[i];
       final total = _categoryTotals[cat.name] ?? 0;
       if (total > 0) {
-        data.add(_BarData(
-          label: cat.name,
-          value: total,
-          color: ChartColors.getColor(i, 'expense'),
-        ));
+        data.add(
+          _BarData(
+            label: cat.name,
+            value: total,
+            color: ChartColors.getColor(i, 'expense'),
+          ),
+        );
       }
     }
     // Sắp xếp giảm dần theo giá trị
@@ -190,8 +194,11 @@ class _Category7DaysWidgetState extends State<Category7DaysWidget> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.bar_chart,
-                          size: 40, color: Colors.grey.shade400),
+                      Icon(
+                        Icons.bar_chart,
+                        size: 40,
+                        color: Colors.grey.shade400,
+                      ),
                       const SizedBox(height: 8),
                       Text(
                         AppStrings.noData,
@@ -207,10 +214,7 @@ class _Category7DaysWidgetState extends State<Category7DaysWidget> {
                   // Bar Line
                   SizedBox(
                     height: 32,
-                    child: _MultiColorBar(
-                      data: barData,
-                      total: total,
-                    ),
+                    child: _MultiColorBar(data: barData, total: total),
                   ),
                   const SizedBox(height: 12),
                   // Legend
@@ -233,10 +237,7 @@ class _Category7DaysWidgetState extends State<Category7DaysWidget> {
                             ),
                           ),
                           const SizedBox(width: 5),
-                          Text(
-                            item.label,
-                            style: theme.textTheme.bodySmall,
-                          ),
+                          Text(item.label, style: theme.textTheme.bodySmall),
                           const SizedBox(width: 3),
                           Text(
                             '($percent%)',
@@ -298,8 +299,9 @@ class _Category7DaysWidgetState extends State<Category7DaysWidget> {
     final categories = _expenseCategories;
 
     // Chỉ hiển thị category có giao dịch
-    final categoriesWithData =
-        categories.where((c) => (_categoryTotals[c.name] ?? 0) > 0).toList();
+    final categoriesWithData = categories
+        .where((c) => (_categoryTotals[c.name] ?? 0) > 0)
+        .toList();
 
     if (categoriesWithData.isEmpty) {
       return const SizedBox.shrink();
@@ -333,10 +335,7 @@ class _Category7DaysWidgetState extends State<Category7DaysWidget> {
               return ListTile(
                 leading: CircleAvatar(
                   backgroundColor: color.withValues(alpha: 0.2),
-                  child: Icon(
-                    _getIconData(cat.icon),
-                    color: color,
-                  ),
+                  child: Icon(_getIconData(cat.icon), color: color),
                 ),
                 title: Text(
                   cat.name,

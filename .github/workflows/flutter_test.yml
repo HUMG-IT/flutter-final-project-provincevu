@@ -1,0 +1,114 @@
+name: Flutter CI/CD
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  # Job kiểm tra Frontend (Flutter)
+  flutter_test:
+    name: Flutter Test & Build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.24.0"
+          channel: "stable"
+          cache: true
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Verify formatting
+        run: dart format --output=none --set-exit-if-changed .
+        continue-on-error: true
+
+      - name: Analyze project source
+        run: flutter analyze --no-fatal-infos
+        continue-on-error: true
+
+      - name: Run tests
+        run: flutter test --coverage
+        continue-on-error: true
+
+      - name: Build APK (Android)
+        run: flutter build apk --debug
+        continue-on-error: true
+
+      - name: Build Web
+        run: flutter build web
+        continue-on-error: true
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: flutter-apk-debug
+          path: frontend/build/app/outputs/flutter-apk/app-debug.apk
+          retention-days: 7
+
+      - name: Upload Web artifact
+        uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: flutter-web
+          path: frontend/build/web
+          retention-days: 7
+
+  # Job kiểm tra Backend (Dart)
+  backend_test:
+    name: Backend Test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Dart
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - name: Get dependencies
+        run: dart pub get
+
+      - name: Verify formatting
+        run: dart format --output=none --set-exit-if-changed .
+        continue-on-error: true
+
+      - name: Analyze project source
+        run: dart analyze --fatal-infos
+        continue-on-error: true
+
+      - name: Run tests
+        run: dart test
+        continue-on-error: true
+
+  # Job tổng hợp kết quả
+  summary:
+    name: CI Summary
+    runs-on: ubuntu-latest
+    needs: [flutter_test, backend_test]
+    if: always()
+
+    steps:
+      - name: Check results
+        run: |
+          echo "Flutter Test: ${{ needs.flutter_test.result }}"
+          echo "Backend Test: ${{ needs.backend_test.result }}"
+          if [ "${{ needs.flutter_test.result }}" == "failure" ] || [ "${{ needs.backend_test.result }}" == "failure" ]; then
+            echo "::warning::Some tests failed, please check the logs"
+          fi

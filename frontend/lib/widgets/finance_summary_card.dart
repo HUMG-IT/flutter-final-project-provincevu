@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/charts/pie_chart.dart';
-import 'package:frontend/screens/statistic_month_screen.dart';
-import 'package:frontend/utils/app_strings.dart';
-import 'package:frontend/utils/app_theme.dart';
-import 'package:frontend/utils/currency.dart';
+
+import '../charts/pie_chart.dart';
+import '../screens/statistic_month_screen.dart';
+import '../utils/app_strings.dart';
+import '../utils/app_theme.dart';
+import '../utils/currency.dart';
 
 typedef OnMonthChanged = void Function(DateTime monthYear);
 
@@ -39,12 +40,16 @@ class FinanceSummaryCard extends StatelessWidget {
           child: Column(
             children: [
               Padding(
-                padding:
-                    const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 8,
+                  horizontal: 16,
+                ),
                 child: Text(
                   AppStrings.selectMonth,
                   style: const TextStyle(
-                      fontSize: 18, fontWeight: FontWeight.bold),
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
               const Divider(),
@@ -216,15 +221,20 @@ class FinanceSummaryCard extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('${AppStrings.income}:',
-                            style: theme.textTheme.bodySmall),
+                        Text(
+                          '${AppStrings.income}:',
+                          style: theme.textTheme.bodySmall,
+                        ),
                         const SizedBox(height: 6),
-                        Text('${AppStrings.expense}:',
-                            style: theme.textTheme.bodySmall),
+                        Text(
+                          '${AppStrings.expense}:',
+                          style: theme.textTheme.bodySmall,
+                        ),
                         const SizedBox(height: 13),
                         Text(
-                            AppStrings.isVietnamese ? 'Còn lại:' : 'Remaining:',
-                            style: theme.textTheme.bodySmall),
+                          AppStrings.isVietnamese ? 'Còn lại:' : 'Remaining:',
+                          style: theme.textTheme.bodySmall,
+                        ),
                       ],
                     ),
                   ),

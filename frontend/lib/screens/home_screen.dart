@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_final_project_provincevu/charts/bar_chart.dart';
-import 'package:flutter_final_project_provincevu/models/giao_dich_model.dart';
-import 'package:flutter_final_project_provincevu/screens/add_expense_screen.dart';
-import 'package:flutter_final_project_provincevu/services/category_service.dart';
-import 'package:flutter_final_project_provincevu/side_menu.dart';
-import 'package:flutter_final_project_provincevu/utils/currency.dart'
-    as currency;
-import 'package:flutter_final_project_provincevu/widgets/finance_summary_card.dart';
 import 'package:localstore/localstore.dart';
+
+import '../charts/bar_chart.dart';
+import '../models/giao_dich_model.dart';
+import '../providers/app_state.dart';
+import '../services/category_service.dart';
+import '../side_menu.dart';
+import '../utils/app_strings.dart';
+import '../utils/currency.dart' as currency;
+import '../widgets/category_7days_widget.dart';
+import '../widgets/finance_summary_card.dart';
+import 'add_expense_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -154,10 +157,12 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
       key: _scaffoldKey,
-      drawer: AppSideMenu(),
+      drawer: const AppSideMenu(),
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -180,25 +185,27 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         Column(
                           children: [
-                            const Text(
-                              'Tổng số dư',
+                            Text(
+                              AppStrings.totalBalance,
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w500,
-                                color: Colors.grey,
+                                color: theme.textTheme.bodySmall?.color,
                               ),
                             ),
                             vndText(
                               tongSoDuAll,
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
-                              color: Colors.black,
+                              color: theme.textTheme.titleLarge?.color,
                             ),
                           ],
                         ),
                         IconButton(
-                          onPressed: () {},
-                          icon: const Icon(Icons.dark_mode),
+                          onPressed: () => AppState().toggleTheme(),
+                          icon: Icon(
+                            isDark ? Icons.light_mode : Icons.dark_mode,
+                          ),
                         ),
                       ],
                     ),
@@ -229,11 +236,11 @@ class _HomeScreenState extends State<HomeScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Row(
+                              Row(
                                 children: [
                                   Text(
-                                    'Chi tiêu 7 ngày gần đây',
-                                    style: TextStyle(
+                                    AppStrings.last7Days,
+                                    style: const TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w800,
                                     ),
@@ -254,8 +261,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                           );
                                         }
                                         if (!snapshot.hasData) {
-                                          return const Center(
-                                            child: Text('Không có dữ liệu.'),
+                                          return Center(
+                                            child: Text(AppStrings.noData),
                                           );
                                         }
                                         final spendingData = snapshot.data!;
@@ -270,6 +277,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                     ),
+                    const SizedBox(height: 20),
+
+                    // Thống kê theo danh mục 7 ngày
+                    const Category7DaysWidget(),
                     const SizedBox(height: 20),
                   ],
                 ),
