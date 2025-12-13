@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
-import 'screens/backup_restore_screen.dart';
-import 'screens/home_screen.dart';
-import 'screens/settings_screen.dart';
-import 'screens/statistic_category_screen.dart';
-import 'screens/statistic_month_screen.dart';
-import 'screens/transaction_history_screen.dart';
-import 'utils/app_strings.dart';
+import '../screens/backup_restore_screen.dart';
+import '../screens/home_screen.dart';
+import '../screens/settings_screen.dart';
+import '../screens/statistic_category_screen.dart';
+import '../screens/statistic_month_screen.dart';
+import '../screens/transaction_history_screen.dart';
+import '../utils/app_strings.dart';
 
 /// Drawer menu bên trái – điều hướng đến màn hình tương ứng và loại bỏ nút "quay lại"
 class AppSideMenu extends StatelessWidget {

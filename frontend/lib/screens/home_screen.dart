@@ -5,11 +5,11 @@ import '../charts/bar_chart.dart';
 import '../models/giao_dich_model.dart';
 import '../providers/app_state.dart';
 import '../services/category_service.dart';
-import '../side_menu.dart';
 import '../utils/app_strings.dart';
 import '../utils/currency.dart' as currency;
 import '../widgets/category_7days_widget.dart';
 import '../widgets/finance_summary_card.dart';
+import '../widgets/side_menu.dart';
 import 'add_expense_screen.dart';
 
 class HomeScreen extends StatefulWidget {

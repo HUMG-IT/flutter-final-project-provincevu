@@ -6,7 +6,7 @@ import 'providers/app_state.dart';
 import 'screens/home_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/transaction_history_screen.dart';
-import 'seven_day_detail.dart';
+import 'services/seven_day_detail.dart';
 import 'utils/app_theme.dart';
 
 void main() async {

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../services/syns_data.dart';
-import '../side_menu.dart';
+import '../widgets/side_menu.dart';
 
 class BackupRestoreScreen extends StatefulWidget {
   const BackupRestoreScreen({super.key});

@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:localstore/localstore.dart';
 
 import '../charts/pie_chart.dart';
-import '../side_menu.dart';
 import '../utils/app_strings.dart';
 import '../utils/currency.dart' as currency;
+import '../widgets/side_menu.dart';
 
 class StatisticMonthScreen extends StatefulWidget {
   const StatisticMonthScreen({super.key});
