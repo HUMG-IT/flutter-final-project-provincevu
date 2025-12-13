@@ -95,9 +95,8 @@ class _HomeScreenState extends State<HomeScreen> {
             ? value
             : (value as Transaction).toMap();
         final dateRaw = map['date'];
-        final txDate = dateRaw is DateTime
-            ? dateRaw
-            : DateTime.parse(dateRaw.toString());
+        final txDate =
+            dateRaw is DateTime ? dateRaw : DateTime.parse(dateRaw.toString());
         if (txDate.month == monthYear.month && txDate.year == monthYear.year) {
           final amt = (map['amount'] as num?)?.toDouble() ?? 0.0;
           if (map['type'] == 'income') {
@@ -252,25 +251,25 @@ class _HomeScreenState extends State<HomeScreen> {
                               Expanded(
                                 child:
                                     FutureBuilder<List<Map<String, dynamic>>>(
-                                      future: _loadDailyExpense7Days(),
-                                      builder: (context, snapshot) {
-                                        if (snapshot.connectionState ==
-                                            ConnectionState.waiting) {
-                                          return const Center(
-                                            child: CircularProgressIndicator(),
-                                          );
-                                        }
-                                        if (!snapshot.hasData) {
-                                          return Center(
-                                            child: Text(AppStrings.noData),
-                                          );
-                                        }
-                                        final spendingData = snapshot.data!;
-                                        return BarChartWidget(
-                                          spendingData: spendingData,
-                                        );
-                                      },
-                                    ),
+                                  future: _loadDailyExpense7Days(),
+                                  builder: (context, snapshot) {
+                                    if (snapshot.connectionState ==
+                                        ConnectionState.waiting) {
+                                      return const Center(
+                                        child: CircularProgressIndicator(),
+                                      );
+                                    }
+                                    if (!snapshot.hasData) {
+                                      return Center(
+                                        child: Text(AppStrings.noData),
+                                      );
+                                    }
+                                    final spendingData = snapshot.data!;
+                                    return BarChartWidget(
+                                      spendingData: spendingData,
+                                    );
+                                  },
+                                ),
                               ),
                             ],
                           ),
@@ -280,7 +279,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(height: 20),
 
                     // Thống kê theo danh mục 7 ngày
-                    const Category7DaysWidget(),
+                    Category7DaysWidget(
+                        key: ValueKey(DateTime.now().millisecondsSinceEpoch)),
                     const SizedBox(height: 20),
                   ],
                 ),

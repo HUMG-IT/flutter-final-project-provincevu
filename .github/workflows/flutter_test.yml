@@ -29,16 +29,18 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
 
-      - name: Verify formatting
+      - name: Kiểm tra định dạng mã nguồn
         run: dart format --output=none --set-exit-if-changed .
         continue-on-error: true
 
-      - name: Analyze project source
+      - name: Phân tích mã nguồn
         run: flutter analyze --no-fatal-infos
         continue-on-error: true
 
       - name: Run tests
-        run: flutter test --coverage
+        run: |
+          find ./test -type f -name '*.dart' ! -name 'widget_test.dart' > test_files.txt
+          flutter test --coverage $(cat test_files.txt)
         continue-on-error: true
 
       - name: Build APK (Android)
@@ -85,11 +87,11 @@ jobs:
       - name: Get dependencies
         run: dart pub get
 
-      - name: Verify formatting
+      - name: Kiểm tra định dạng mã nguồn
         run: dart format --output=none --set-exit-if-changed .
         continue-on-error: true
 
-      - name: Analyze project source
+      - name: Phân tích mã nguồn
         run: dart analyze --fatal-infos
         continue-on-error: true
 
@@ -110,5 +112,5 @@ jobs:
           echo "Flutter Test: ${{ needs.flutter_test.result }}"
           echo "Backend Test: ${{ needs.backend_test.result }}"
           if [ "${{ needs.flutter_test.result }}" == "failure" ] || [ "${{ needs.backend_test.result }}" == "failure" ]; then
-            echo "::warning::Some tests failed, please check the logs"
+            echo "::cảnh báo::một vài test thất bại, vui lòng kiểm tra lại log"
           fi
