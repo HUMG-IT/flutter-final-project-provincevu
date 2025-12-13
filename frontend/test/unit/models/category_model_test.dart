@@ -3,7 +3,7 @@ import 'package:frontend/models/category_model.dart';
 
 void main() {
   group('Category Model Tests', () {
-    test('should create Category with required fields', () {
+    test('nên tạo Category với các trường bắt buộc', () {
       // Arrange
       final category = Category(
         id: 'cat_001',
@@ -19,7 +19,7 @@ void main() {
       expect(category.type, 'expense');
     });
 
-    test('should create Category from map', () {
+    test('nên tạo Category từ map', () {
       // Arrange
       final map = {
         'id': 'cat_002',
@@ -38,7 +38,7 @@ void main() {
       expect(category.type, 'income');
     });
 
-    test('should convert Category to map', () {
+    test('nên chuyển Category thành map', () {
       // Arrange
       final category = Category(
         id: 'cat_003',
@@ -57,7 +57,7 @@ void main() {
       expect(map['type'], 'expense');
     });
 
-    test('should correctly identify expense category', () {
+    test('nên xác định đúng danh mục chi tiêu', () {
       // Arrange
       final category = Category(
         id: 'cat_004',
@@ -70,7 +70,7 @@ void main() {
       expect(category.type, 'expense');
     });
 
-    test('should correctly identify income category', () {
+    test('nên xác định đúng danh mục thu nhập', () {
       // Arrange
       final category = Category(
         id: 'cat_005',
@@ -83,7 +83,7 @@ void main() {
       expect(category.type, 'income');
     });
 
-    test('should handle different icon names', () {
+    test('nên xử lý đúng các tên biểu tượng khác nhau', () {
       // Arrange
       final icons = [
         'restaurant',

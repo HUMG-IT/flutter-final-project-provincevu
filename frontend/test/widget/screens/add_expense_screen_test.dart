@@ -4,7 +4,7 @@ import 'package:frontend/screens/add_expense_screen.dart';
 
 void main() {
   group('AddExpenseScreen Widget Tests', () {
-    testWidgets('should render AddExpenseScreen without error', (tester) async {
+    testWidgets('Nên hiển thị AddExpenseScreen mà không lỗi', (tester) async {
       // Arrange & Act
       await tester.pumpWidget(
         const MaterialApp(
@@ -17,7 +17,7 @@ void main() {
       expect(find.byType(Scaffold), findsOneWidget);
     });
 
-    testWidgets('should have app bar with title', (tester) async {
+    testWidgets('Nên có app bar với tiêu đề', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: AddExpenseScreen(),
@@ -29,7 +29,7 @@ void main() {
       expect(find.byType(AppBar), findsOneWidget);
     });
 
-    testWidgets('should have text fields for input', (tester) async {
+    testWidgets('Nên có các trường nhập liệu', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: AddExpenseScreen(),
@@ -41,7 +41,7 @@ void main() {
       expect(find.byType(TextField), findsWidgets);
     });
 
-    testWidgets('should have save button', (tester) async {
+    testWidgets('Nên có nút lưu', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: AddExpenseScreen(),
@@ -54,7 +54,7 @@ void main() {
       expect(buttons.evaluate().isNotEmpty, true);
     });
 
-    testWidgets('should have back button in app bar', (tester) async {
+    testWidgets('Nên có nút quay lại trong app bar', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: AddExpenseScreen(),
@@ -66,7 +66,7 @@ void main() {
       expect(find.byType(AppBar), findsOneWidget);
     });
 
-    testWidgets('should be scrollable for long content', (tester) async {
+    testWidgets('Nên có khả năng cuộn khi nội dung dài', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: AddExpenseScreen(),

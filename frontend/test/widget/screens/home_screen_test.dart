@@ -4,7 +4,7 @@ import 'package:frontend/screens/home_screen.dart';
 
 void main() {
   group('HomeScreen Widget Tests', () {
-    testWidgets('should render HomeScreen without error', (tester) async {
+    testWidgets('nên hiển thị HomeScreen mà không lỗi', (tester) async {
       // Arrange & Act
       await tester.pumpWidget(
         const MaterialApp(
@@ -19,7 +19,7 @@ void main() {
       expect(find.byType(Scaffold), findsOneWidget);
     });
 
-    testWidgets('should have menu button', (tester) async {
+    testWidgets('nên có nút menu', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: HomeScreen(),
@@ -31,7 +31,7 @@ void main() {
       expect(find.byIcon(Icons.menu), findsOneWidget);
     });
 
-    testWidgets('should have floating action button', (tester) async {
+    testWidgets('nên có nút floating action button', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: HomeScreen(),
@@ -43,7 +43,8 @@ void main() {
       expect(find.byType(FloatingActionButton), findsOneWidget);
     });
 
-    testWidgets('should have add icon in FAB', (tester) async {
+    testWidgets('nên có biểu tượng thêm trong nút floating action button',
+        (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: HomeScreen(),
@@ -55,7 +56,7 @@ void main() {
       expect(find.byIcon(Icons.add), findsOneWidget);
     });
 
-    testWidgets('should have theme toggle button', (tester) async {
+    testWidgets('nên có nút chuyển đổi chủ đề', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: HomeScreen(),
@@ -70,7 +71,7 @@ void main() {
           true);
     });
 
-    testWidgets('menu button should be tappable', (tester) async {
+    testWidgets('nút menu nên có thể nhấn được', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: HomeScreen(),
@@ -87,7 +88,7 @@ void main() {
       await tester.pump();
     });
 
-    testWidgets('FAB should be tappable', (tester) async {
+    testWidgets('nút floating action button có thể nhấn được', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: HomeScreen(),

@@ -3,7 +3,7 @@ import 'package:frontend/models/giao_dich_model.dart';
 
 void main() {
   group('Transaction Model Tests', () {
-    test('should create Transaction with required fields', () {
+    test('nên tạo Transaction với các trường bắt buộc', () {
       // Arrange
       final transaction = Transaction(
         id: 'tx_001',
@@ -22,7 +22,7 @@ void main() {
       expect(transaction.note, 'Ăn sáng');
     });
 
-    test('should create Transaction from map', () {
+    test('nên tạo Transaction từ map', () {
       // Arrange
       final map = {
         'id': 'tx_002',
@@ -44,7 +44,7 @@ void main() {
       expect(transaction.note, 'Lương tháng 12');
     });
 
-    test('should convert Transaction to map', () {
+    test('nên chuyển Transaction thành map', () {
       // Arrange
       final date = DateTime(2025, 12, 13, 10, 30);
       final transaction = Transaction(
@@ -67,7 +67,7 @@ void main() {
       expect(map['note'], 'Grab');
     });
 
-    test('should handle empty note', () {
+    test('nên xử lý đúng trường note rỗng', () {
       // Arrange
       final map = {
         'id': 'tx_004',
@@ -85,7 +85,7 @@ void main() {
       expect(transaction.note, '');
     });
 
-    test('should handle zero amount', () {
+    test('nên xử lý đúng số tiền bằng 0', () {
       // Arrange
       final transaction = Transaction(
         id: 'tx_005',
@@ -100,7 +100,7 @@ void main() {
       expect(transaction.amount, 0.0);
     });
 
-    test('should correctly identify income type', () {
+    test('nên xác định đúng loại thu nhập', () {
       // Arrange
       final transaction = Transaction(
         id: 'tx_006',
@@ -115,7 +115,7 @@ void main() {
       expect(transaction.type, 'income');
     });
 
-    test('should correctly identify expense type', () {
+    test('nên xác định đúng loại chi tiêu', () {
       // Arrange
       final transaction = Transaction(
         id: 'tx_007',

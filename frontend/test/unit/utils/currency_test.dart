@@ -3,7 +3,7 @@ import 'package:frontend/utils/currency.dart';
 
 void main() {
   group('Currency Utils Tests', () {
-    test('should format positive number', () {
+    test('nên định dạng số dương', () {
       // Arrange
       const amount = 1000000;
 
@@ -15,7 +15,7 @@ void main() {
       expect(formatted.contains('000'), true);
     });
 
-    test('should format zero', () {
+    test('nên định dạng số 0', () {
       // Arrange
       const amount = 0;
 
@@ -26,7 +26,7 @@ void main() {
       expect(formatted, '0');
     });
 
-    test('should format large number with thousand separators', () {
+    test('nên định dạng số lớn với dấu phân cách hàng nghìn', () {
       // Arrange
       const amount = 10000000;
 
@@ -37,7 +37,7 @@ void main() {
       expect(formatted, '10.000.000');
     });
 
-    test('should format small number without separator', () {
+    test('nên định dạng số nhỏ không có dấu phân cách', () {
       // Arrange
       const amount = 500;
 
@@ -48,7 +48,7 @@ void main() {
       expect(formatted, '500');
     });
 
-    test('should handle negative numbers', () {
+    test('nên xử lý số âm đúng cách', () {
       // Arrange
       const amount = -500000;
 
@@ -59,7 +59,7 @@ void main() {
       expect(formatted.isNotEmpty, true);
     });
 
-    test('should format 1 million correctly', () {
+    test('nên định dạng 1 triệu đúng cách', () {
       // Arrange
       const amount = 1000000;
 
@@ -70,7 +70,7 @@ void main() {
       expect(formatted, '1.000.000');
     });
 
-    test('should format decimal number by truncating', () {
+    test('nên định dạng số thập phân bằng cách làm tròn', () {
       // Arrange
       const amount = 1500000.99;
 

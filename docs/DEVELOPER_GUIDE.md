@@ -214,14 +214,14 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('MyWidget Tests', () {
-    test('should do something', () {
+    test('nên làm gì đó', () {
       // Arrange
       // Act
       // Assert
       expect(actual, expected);
     });
 
-    testWidgets('should render correctly', (tester) async {
+    testWidgets('nên render đúng', (tester) async {
       await tester.pumpWidget(MyWidget());
       expect(find.text('Hello'), findsOneWidget);
     });

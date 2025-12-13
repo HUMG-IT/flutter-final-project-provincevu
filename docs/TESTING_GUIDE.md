@@ -81,8 +81,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:frontend/models/giao_dich_model.dart';
 
 void main() {
-  group('Transaction Model', () {
-    test('should create Transaction from map', () {
+  group('mô hình giao dịch', () {
+    test('Nên tạo Transaction từ map', () {
       // Arrange
       final map = {
         'id': 'tx_001',
@@ -104,7 +104,7 @@ void main() {
       expect(transaction.note, 'Ăn sáng');
     });
 
-    test('should convert Transaction to map', () {
+    test('Nên chuyển Transaction thành map', () {
       // Arrange
       final transaction = Transaction(
         id: 'tx_001',
@@ -124,7 +124,7 @@ void main() {
       expect(map['type'], 'expense');
     });
 
-    test('should handle null note', () {
+    test('Nên xử lý note null', () {
       final map = {
         'id': 'tx_001',
         'amount': 100000.0,
@@ -157,11 +157,11 @@ void main() {
       service = CategoryService();
     });
 
-    test('default categories should not be empty', () {
+    test('danh mục mặc định không được rỗng', () {
       expect(defaultCategories.isNotEmpty, true);
     });
 
-    test('should have both expense and income categories', () {
+    test('nên có cả danh mục chi tiêu và thu nhập', () {
       final expenseCategories = defaultCategories
           .where((c) => c.type == 'expense')
           .toList();
@@ -190,7 +190,7 @@ import 'package:frontend/screens/home_screen.dart';
 
 void main() {
   group('HomeScreen Widget', () {
-    testWidgets('should display total balance', (tester) async {
+    testWidgets('nên hiển thị tổng số dư', (tester) async {
       // Arrange & Act
       await tester.pumpWidget(
         const MaterialApp(
@@ -203,7 +203,7 @@ void main() {
       expect(find.text('Tổng số dư'), findsOneWidget);
     });
 
-    testWidgets('should have menu button', (tester) async {
+    testWidgets('nên có nút menu', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: HomeScreen(),
@@ -214,7 +214,7 @@ void main() {
       expect(find.byIcon(Icons.menu), findsOneWidget);
     });
 
-    testWidgets('should have floating action button', (tester) async {
+    testWidgets('nên có nút floating action button', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: HomeScreen(),
@@ -238,7 +238,7 @@ import 'package:frontend/widgets/finance_summary_card.dart';
 
 void main() {
   group('FinanceSummaryCard Widget', () {
-    testWidgets('should display income and expense', (tester) async {
+    testWidgets('nên hiển thị thu nhập và chi tiêu', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
