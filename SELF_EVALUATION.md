@@ -125,5 +125,3 @@ backups/
 1.  **Đạt yêu cầu cơ bản:** Build thành công, CRUD đầy đủ, UI thân thiện
 2.  **Tích hợp backend:** Localstore + Firebase Firestore
 3.  **Quản lý trạng thái:** Provider + StatefulWidget
-
----

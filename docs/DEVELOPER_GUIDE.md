@@ -1,4 +1,4 @@
-# 🛠️ Hướng Dẫn Phát Triển (Developer Guide)
+# Hướng Dẫn Phát Triển (Developer Guide)
 
 ## Yêu Cầu Hệ Thống
 

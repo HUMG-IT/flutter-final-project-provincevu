@@ -1,6 +1,6 @@
-# 📚 Hướng Dẫn Sử Dụng Ứng Dụng Quản Lý Chi Tiêu
+# Hướng Dẫn Sử Dụng Ứng Dụng Quản Lý Chi Tiêu
 
-## 📱 Các Màn Hình Chính
+## Các Màn Hình Chính
 
 ### 1. Màn Hình Chính (Home Screen)
 
