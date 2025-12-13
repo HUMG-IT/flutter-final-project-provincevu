@@ -24,7 +24,7 @@ class _BarChartWidgetState extends State<BarChartWidget> {
         style: TextStyle(
           color: color ?? Colors.black87,
           fontWeight: FontWeight.w600,
-          fontSize: 10,
+          fontSize: 9,
         ),
         children: [
           TextSpan(text: _formatNumber(amount)),
@@ -47,9 +47,8 @@ class _BarChartWidgetState extends State<BarChartWidget> {
         .map((e) => (e['amount'] as num?)?.toDouble() ?? 0.0)
         .toList();
 
-    final double maxValue = amounts.isEmpty
-        ? 0
-        : amounts.reduce((a, b) => a > b ? a : b);
+    final double maxValue =
+        amounts.isEmpty ? 0 : amounts.reduce((a, b) => a > b ? a : b);
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -58,8 +57,7 @@ class _BarChartWidgetState extends State<BarChartWidget> {
         const double verticalSpacing = 6.0;
 
         final double availableHeight = constraints.maxHeight;
-        double maxBarHeight =
-            availableHeight -
+        double maxBarHeight = availableHeight -
             topLabelHeight -
             bottomLabelHeight -
             (verticalSpacing * 2);
@@ -87,7 +85,7 @@ class _BarChartWidgetState extends State<BarChartWidget> {
                 const SizedBox(height: verticalSpacing),
                 Container(
                   height: scaledHeight,
-                  width: 40,
+                  width: 35,
                   decoration: const BoxDecoration(
                     color: Colors.redAccent,
                     borderRadius: BorderRadius.only(
