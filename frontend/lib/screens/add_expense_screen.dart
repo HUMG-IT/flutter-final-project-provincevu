@@ -77,12 +77,11 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       _isEditMode = true;
       _editTransactionId = widget.transactionToEdit!.id;
       _type = widget.transactionToEdit!.type;
-      _amountController.text = widget.transactionToEdit!.amount
-          .toStringAsFixed(0)
-          .replaceAllMapped(
-            RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
-            (m) => '${m[1]}.',
-          );
+      _amountController.text =
+          widget.transactionToEdit!.amount.toStringAsFixed(0).replaceAllMapped(
+                RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+                (m) => '${m[1]}.',
+              );
       _noteController.text = widget.transactionToEdit!.note;
       _selectedDate = widget.transactionToEdit!.date;
 
@@ -233,226 +232,231 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
         title: Text(_isEditMode ? 'Sửa giao dịch' : 'Thêm giao dịch'),
         centerTitle: true,
       ),
+      resizeToAvoidBottomInset: true,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-          child: Column(
-            children: [
-              // Loại giao dịch
-              Row(
-                children: [
-                  Expanded(
-                    child: ChoiceChip(
-                      label: const Text('Chi tiêu'),
-                      selected: _type == 'expense',
-                      onSelected: (selected) {
-                        if (selected) {
-                          setState(() {
-                            _type = 'expense';
-                            if (_selectedCategory?.type != _type) {
-                              _selectedCategory = null;
-                            }
-                          });
-                        }
-                      },
-                      selectedColor: Colors.red.withValues(alpha: 0.15),
-                      labelStyle: TextStyle(
-                        color: _type == 'expense' ? Colors.red : Colors.black87,
-                        fontWeight: FontWeight.w600,
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Loại giao dịch
+                Row(
+                  children: [
+                    Expanded(
+                      child: ChoiceChip(
+                        label: const Text('Chi tiêu'),
+                        selected: _type == 'expense',
+                        onSelected: (selected) {
+                          if (selected) {
+                            setState(() {
+                              _type = 'expense';
+                              if (_selectedCategory?.type != _type) {
+                                _selectedCategory = null;
+                              }
+                            });
+                          }
+                        },
+                        selectedColor: Colors.red.withValues(alpha: 0.15),
+                        labelStyle: TextStyle(
+                          color:
+                              _type == 'expense' ? Colors.red : Colors.black87,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ChoiceChip(
-                      label: const Text('Thu nhập'),
-                      selected: _type == 'income',
-                      onSelected: (selected) {
-                        if (selected) {
-                          setState(() {
-                            _type = 'income';
-                            if (_selectedCategory?.type != _type) {
-                              _selectedCategory = null;
-                            }
-                          });
-                        }
-                      },
-                      selectedColor: Colors.green.withValues(alpha: 0.15),
-                      labelStyle: TextStyle(
-                        color: _type == 'income'
-                            ? Colors.green
-                            : Colors.black87,
-                        fontWeight: FontWeight.w600,
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ChoiceChip(
+                        label: const Text('Thu nhập'),
+                        selected: _type == 'income',
+                        onSelected: (selected) {
+                          if (selected) {
+                            setState(() {
+                              _type = 'income';
+                              if (_selectedCategory?.type != _type) {
+                                _selectedCategory = null;
+                              }
+                            });
+                          }
+                        },
+                        selectedColor: Colors.green.withValues(alpha: 0.15),
+                        labelStyle: TextStyle(
+                          color:
+                              _type == 'income' ? Colors.green : Colors.black87,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+
+                // Nhập số tiền
+                TextField(
+                  controller: _amountController,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                    signed: false,
                   ),
-                ],
-              ),
-              const SizedBox(height: 16),
-
-              // Nhập số tiền
-              TextField(
-                controller: _amountController,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                  signed: false,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    _amountFormatter,
+                  ],
+                  decoration: const InputDecoration(
+                    labelText: 'Số tiền',
+                    hintText: 'Nhập số tiền',
+                    border: UnderlineInputBorder(),
+                  ),
+                  onChanged: (_) => setState(() {}),
                 ),
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                  _amountFormatter,
-                ],
-                decoration: const InputDecoration(
-                  labelText: 'Số tiền',
-                  hintText: 'Nhập số tiền',
-                  border: UnderlineInputBorder(),
-                ),
-                onChanged: (_) => setState(() {}),
-              ),
-              const SizedBox(height: 16),
+                const SizedBox(height: 16),
 
-              // Categories: 2 rows * 4 expanded each
-              if (categories.isNotEmpty) ...[
-                _CategoryRow(
-                  categories: row1,
-                  selected: _selectedCategory,
-                  onSelected: (c) => setState(() => _selectedCategory = c),
-                  iconResolver: _iconFromMap,
-                ),
-                const SizedBox(height: 8),
-                _CategoryRow(
-                  categories: row2,
-                  selected: _selectedCategory,
-                  onSelected: (c) => setState(() => _selectedCategory = c),
-                  iconResolver: _iconFromMap,
-                ),
-              ] else ...[
-                const Center(child: CircularProgressIndicator()),
-              ],
-
-              const SizedBox(height: 16),
-
-              // Ghi chú
-              TextField(
-                controller: _noteController,
-                decoration: const InputDecoration(
-                  labelText: 'Ghi chú',
-                  hintText: 'Nhập ghi chú (tuỳ chọn)',
-                  border: UnderlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Chọn ngày giao dịch (tùy chọn nhanh + chọn ngày thủ công, KHÔNG vượt quá hôm nay)
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Ngày giao dịch',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                // Categories: 2 rows * 4 expanded each
+                if (categories.isNotEmpty) ...[
+                  _CategoryRow(
+                    categories: row1,
+                    selected: _selectedCategory,
+                    onSelected: (c) => setState(() => _selectedCategory = c),
+                    iconResolver: _iconFromMap,
                   ),
                   const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: ChoiceChip(
-                          label: const Text('Hôm nay'),
-                          selected: _selectedQuickIndex == 0,
-                          onSelected: (selected) {
-                            if (selected) {
-                              setState(() {
-                                _selectedQuickIndex = 0;
-                                _selectedDate = _quickDates[0];
-                              });
-                            }
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: ChoiceChip(
-                          label: const Text('Hôm qua'),
-                          selected: _selectedQuickIndex == 1,
-                          onSelected: (selected) {
-                            if (selected) {
-                              setState(() {
-                                _selectedQuickIndex = 1;
-                                _selectedDate = _quickDates[1];
-                              });
-                            }
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: ChoiceChip(
-                          label: const Text('Hôm kia'),
-                          selected: _selectedQuickIndex == 2,
-                          onSelected: (selected) {
-                            if (selected) {
-                              setState(() {
-                                _selectedQuickIndex = 2;
-                                _selectedDate = _quickDates[2];
-                              });
-                            }
-                          },
-                        ),
-                      ),
-                    ],
+                  _CategoryRow(
+                    categories: row2,
+                    selected: _selectedCategory,
+                    onSelected: (c) => setState(() => _selectedCategory = c),
+                    iconResolver: _iconFromMap,
                   ),
-                  const SizedBox(height: 8),
-                  InkWell(
-                    onTap: _pickDateOnly,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 12,
-                        horizontal: 12,
-                      ),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey.shade300),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.calendar_today,
-                            size: 18,
-                            color: Colors.blueGrey,
+                ] else ...[
+                  const Center(child: CircularProgressIndicator()),
+                ],
+
+                const SizedBox(height: 16),
+
+                // Ghi chú
+                TextField(
+                  controller: _noteController,
+                  decoration: const InputDecoration(
+                    labelText: 'Ghi chú',
+                    hintText: 'Nhập ghi chú (tuỳ chọn)',
+                    border: UnderlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Chọn ngày giao dịch (tùy chọn nhanh + chọn ngày thủ công, KHÔNG vượt quá hôm nay)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Ngày giao dịch',
+                      style:
+                          TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ChoiceChip(
+                            label: const Text('Hôm nay'),
+                            selected: _selectedQuickIndex == 0,
+                            onSelected: (selected) {
+                              if (selected) {
+                                setState(() {
+                                  _selectedQuickIndex = 0;
+                                  _selectedDate = _quickDates[0];
+                                });
+                              }
+                            },
                           ),
-                          const SizedBox(width: 8),
-                          Text(
-                            _formatDate(_selectedDate),
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: ChoiceChip(
+                            label: const Text('Hôm qua'),
+                            selected: _selectedQuickIndex == 1,
+                            onSelected: (selected) {
+                              if (selected) {
+                                setState(() {
+                                  _selectedQuickIndex = 1;
+                                  _selectedDate = _quickDates[1];
+                                });
+                              }
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: ChoiceChip(
+                            label: const Text('Hôm kia'),
+                            selected: _selectedQuickIndex == 2,
+                            onSelected: (selected) {
+                              if (selected) {
+                                setState(() {
+                                  _selectedQuickIndex = 2;
+                                  _selectedDate = _quickDates[2];
+                                });
+                              }
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    InkWell(
+                      onTap: _pickDateOnly,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 12,
+                          horizontal: 12,
+                        ),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey.shade300),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.calendar_today,
+                              size: 18,
+                              color: Colors.blueGrey,
                             ),
-                          ),
-                          const Spacer(),
-                          const Icon(
-                            Icons.edit_calendar,
-                            size: 18,
-                            color: Colors.grey,
-                          ),
-                        ],
+                            const SizedBox(width: 8),
+                            Text(
+                              _formatDate(_selectedDate),
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const Spacer(),
+                            const Icon(
+                              Icons.edit_calendar,
+                              size: 18,
+                              color: Colors.grey,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-
-              const Spacer(),
-
-              // Nút thêm
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _isFormValid ? _submit : null,
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: const Size(double.infinity, 48),
-                  ),
-                  child: const Text('Thêm'),
+                  ],
                 ),
-              ),
-            ],
+
+                const SizedBox(height: 24),
+
+                // Nút thêm
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _isFormValid ? _submit : null,
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size(double.infinity, 48),
+                    ),
+                    child: const Text('Thêm'),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -507,9 +511,8 @@ class _CategoryRow extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 12,
                       color: isSelected ? Colors.blue : Colors.black87,
-                      fontWeight: isSelected
-                          ? FontWeight.w600
-                          : FontWeight.w500,
+                      fontWeight:
+                          isSelected ? FontWeight.w600 : FontWeight.w500,
                     ),
                   ),
                 ],

@@ -33,7 +33,7 @@ class AppSideMenu extends StatelessWidget {
     // Màu highlight cho mục đang chọn - phù hợp với cả dark và light theme
     final selectedColor = isDark
         ? theme.colorScheme.primaryContainer
-        : theme.colorScheme.primaryContainer.withOpacity(0.3);
+        : theme.colorScheme.primaryContainer.withValues(alpha: 0.3);
     final selectedTextColor = isDark
         ? theme.colorScheme.onPrimaryContainer
         : theme.colorScheme.primary;
