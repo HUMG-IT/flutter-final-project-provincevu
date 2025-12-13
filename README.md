@@ -147,6 +147,7 @@ flutter run
 ---
 
 ## Tự Đánh Giá
+điểm tự đánh giá **9/10**
 
 Xem chi tiết tại: [SELF_EVALUATION.md](./SELF_EVALUATION.md)
 
