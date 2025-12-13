@@ -142,7 +142,7 @@ flutter run
 | Nội dung              | Link         |
 | --------------------- | ------------ |
 | Demo chức năng chính  | [https://drive.google.com/file/d/1OkQFgEnFzyFF0qem13_pYBvxmPa_JSpm/view?usp=sharing] |
-| Demo kiểm thử tự động | [Link video] |
+| Demo kiểm thử tự động | [https://drive.google.com/file/d/1-Y60UN8J02fRnCZyGUM6kkEZk0s4w8xQ/view?usp=sharing] |
 
 ---
 
