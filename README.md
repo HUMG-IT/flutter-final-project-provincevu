@@ -5,7 +5,7 @@
 - **Tên dự án:** Ứng dụng quản lý tài chính cá nhân
 - **Sinh viên:** Vũ Văn Tỉnh
 - **MSSV:** 2221050517
-- **Môn học:** Phát Triển Đa Nền Tảng
+- **Lớp:** Công nghệ Thông tin Chất lượng cao B K67
 
 ---
 
