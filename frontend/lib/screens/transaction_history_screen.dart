@@ -5,7 +5,7 @@ import '../models/giao_dich_model.dart';
 import '../utils/app_strings.dart';
 import '../utils/app_theme.dart';
 import '../utils/currency.dart' as currency;
-import '../widgets/side_menu.dart';
+import '../widgets/side_menu.dart' show AppSideMenu, MenuIndex;
 import 'add_expense_screen.dart';
 
 /// Màn hình lịch sử giao dịch với chức năng sửa/xóa
@@ -137,7 +137,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       key: _scaffoldKey,
-      drawer: const AppSideMenu(),
+      drawer: const AppSideMenu(currentIndex: MenuIndex.transactionHistory),
       appBar: AppBar(
         title: Text(AppStrings.transactionHistory),
         leading: IconButton(

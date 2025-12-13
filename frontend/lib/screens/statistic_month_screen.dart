@@ -4,7 +4,7 @@ import 'package:localstore/localstore.dart';
 import '../charts/pie_chart.dart';
 import '../utils/app_strings.dart';
 import '../utils/currency.dart' as currency;
-import '../widgets/side_menu.dart';
+import '../widgets/side_menu.dart' show AppSideMenu, MenuIndex;
 
 class StatisticMonthScreen extends StatefulWidget {
   const StatisticMonthScreen({super.key});
@@ -121,7 +121,7 @@ class _StatisticMonthScreenState extends State<StatisticMonthScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       // Drawer integrated into Scaffold (Side Menu)
-      drawer: AppSideMenu(),
+      drawer: const AppSideMenu(currentIndex: MenuIndex.statisticMonth),
 
       appBar: AppBar(
         title: Text(

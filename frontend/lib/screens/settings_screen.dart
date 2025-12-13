@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../providers/app_state.dart';
 import '../utils/app_strings.dart';
 import '../utils/app_theme.dart';
-import '../widgets/side_menu.dart';
+import '../widgets/side_menu.dart' show AppSideMenu, MenuIndex;
 
 /// Màn hình Cài đặt - Theme và Ngôn ngữ (đơn giản)
 class SettingsScreen extends StatefulWidget {
@@ -24,7 +24,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     return Scaffold(
       key: _scaffoldKey,
-      drawer: const AppSideMenu(),
+      drawer: const AppSideMenu(currentIndex: MenuIndex.settings),
       appBar: AppBar(
         title: Text(AppStrings.settings),
         leading: IconButton(

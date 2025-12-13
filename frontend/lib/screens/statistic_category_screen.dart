@@ -6,7 +6,7 @@ import '../data/default_categories.dart';
 import '../models/category_model.dart';
 import '../models/giao_dich_model.dart';
 import '../utils/currency.dart' as currency;
-import '../widgets/side_menu.dart';
+import '../widgets/side_menu.dart' show AppSideMenu, MenuIndex;
 
 class StatisticCategoryScreen extends StatefulWidget {
   const StatisticCategoryScreen({super.key});
@@ -308,7 +308,7 @@ class _StatisticCategoryScreenState extends State<StatisticCategoryScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       key: _scaffoldKey,
-      drawer: AppSideMenu(),
+      drawer: const AppSideMenu(currentIndex: MenuIndex.statisticCategory),
       body: Column(
         children: [
           // Header với background xanh lá

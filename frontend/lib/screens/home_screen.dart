@@ -9,7 +9,7 @@ import '../utils/app_strings.dart';
 import '../utils/currency.dart' as currency;
 import '../widgets/category_7days_widget.dart';
 import '../widgets/finance_summary_card.dart';
-import '../widgets/side_menu.dart';
+import '../widgets/side_menu.dart' show AppSideMenu, MenuIndex;
 import 'add_expense_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -161,7 +161,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       key: _scaffoldKey,
-      drawer: const AppSideMenu(),
+      drawer: const AppSideMenu(currentIndex: MenuIndex.home),
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {

@@ -14,12 +14,12 @@ class PieChartWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Nếu muốn tỷ lệ chi tiêu so với thu nhập, dùng:
-    // final base = thuNhap;
-    // final percent = base > 0 ? (chiTieu / base) : 0.0;
+    final base = thuNhap;
+    double percent = base > 0 ? (chiTieu / base) : 0.0;
 
-    // Hiện tại dùng tỷ lệ chi tiêu trên tổng (thuNhap + chiTieu)
-    final total = thuNhap + chiTieu;
-    double percent = total > 0 ? (chiTieu / total) : 0.0;
+    // // Hiện tại dùng tỷ lệ chi tiêu trên tổng (thuNhap + chiTieu)
+    // final total = thuNhap + chiTieu;
+    // double percent = total > 0 ? (chiTieu / total) : 0.0;
 
     // Đảm bảo trong khoảng 0..1
     percent = percent.clamp(0.0, 1.0);

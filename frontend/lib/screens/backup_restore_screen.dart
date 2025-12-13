@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../services/syns_data.dart';
-import '../widgets/side_menu.dart';
+import '../widgets/side_menu.dart' show AppSideMenu, MenuIndex;
 
 class BackupRestoreScreen extends StatefulWidget {
   const BackupRestoreScreen({super.key});
@@ -77,7 +77,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       // Side menu (Drawer) cho phép mở danh mục
-      drawer: AppSideMenu(),
+      drawer: const AppSideMenu(currentIndex: MenuIndex.backupRestore),
       appBar: AppBar(
         title: const Text("Sao lưu & Khôi phục"),
         centerTitle: true,
