@@ -2,11 +2,10 @@
 
 ## Thông Tin Dự Án
 
-- **Tên dự án:** Flutter Final Project - Personal Finance Manager
-- **Sinh viên:** [Điền tên sinh viên]
-- **MSSV:** [Điền MSSV]
+- **Tên dự án:** Ứng dụng quản lý tài chính cá nhân
+- **Sinh viên:** Vũ Văn Tỉnh
+- **MSSV:** 2221050517
 - **Môn học:** Phát Triển Đa Nền Tảng
-- **Giảng viên:** [Điền tên giảng viên]
 
 ---
 
