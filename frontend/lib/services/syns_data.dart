@@ -36,7 +36,11 @@ class DataSyncService {
         final localData = await _getCollectionData(collection);
         final colRef = sessionRef.collection(collection);
         for (final entry in localData.entries) {
-          await colRef.doc(entry.key).set(entry.value);
+          // entry.key có thể là "transactions/123" hoặc chỉ "123"
+          // Chỉ lấy phần cuối (document ID) để tránh đường dẫn lồng nhau
+          final docId =
+              entry.key.contains('/') ? entry.key.split('/').last : entry.key;
+          await colRef.doc(docId).set(entry.value);
         }
       }
 
