@@ -141,7 +141,7 @@ flutter run
 
 | Nội dung              | Link         |
 | --------------------- | ------------ |
-| Demo chức năng chính  | [Link video] |
+| Demo chức năng chính  | [https://drive.google.com/file/d/1A92D6TAbcuYZNRTMTz26_tzojWSS1tgv/view?usp=sharing] |
 | Demo kiểm thử tự động | [Link video] |
 
 ---
